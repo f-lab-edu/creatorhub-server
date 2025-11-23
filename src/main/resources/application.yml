@@ -1,0 +1,36 @@
+logging:
+  level:
+    org:
+      springframework:
+        web: DEBUG
+      hibernate:
+        type:
+          descriptor:
+            sql: trace
+    com:
+      creatorhub: DEBUG
+spring:
+  application:
+    name: creatorhub-server
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: '20'
+        order_updates: 'true'
+        order_inserts: 'true'
+        format_sql: 'true'
+        show_sql: 'true'
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.MySQLDialect
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://localhost:3306/creatorhub?serverTimezone=Asia/Seoul
+#    username: root
+#    password: '1234'
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+server:
+  port: '8000'
