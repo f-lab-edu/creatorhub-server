@@ -1,0 +1,9 @@
+mysql-data
+mysql-data/*
+
+.git
+.gradle
+build
+out
+*.log
+*.iml
