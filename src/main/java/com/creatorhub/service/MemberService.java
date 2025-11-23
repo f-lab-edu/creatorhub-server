@@ -1,19 +1,18 @@
 package com.creatorhub.service;
 
-import com.creatorhub.dto.MemberRequestDto;
-import com.creatorhub.dto.MemberResponseDto;
+import com.creatorhub.dto.MemberRequest;
+import com.creatorhub.dto.MemberResponse;
 import com.creatorhub.entity.Member;
 import com.creatorhub.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Log4j2
-@Transactional
+@Slf4j
 public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
@@ -21,33 +20,48 @@ public class MemberService {
     /**
      * 회원가입
      */
-    public MemberResponseDto signup(MemberRequestDto memberRequestDto) {
+    @Transactional
+    public MemberResponse signup(MemberRequest memberRequest) {
         // 이메일 중복 체크
-        validateDuplicateMember(memberRequestDto);
+        validateDuplicateMember(memberRequest);
 
-        Member member = Member.builder()
-                .email(memberRequestDto.getEmail())
-                .password(passwordEncoder.encode(memberRequestDto.getPassword()))
-                .name(memberRequestDto.getName())
-                .birthday(memberRequestDto.getBirthday())
-                .gender(memberRequestDto.getGender())
-                .build();
+        String encodedPassword = passwordEncoder.encode(memberRequest.password());
+
+        Member member = Member.createMember(
+                memberRequest.email(),
+                encodedPassword,
+                memberRequest.name(),
+                memberRequest.birthday(),
+                memberRequest.gender()
+        );
 
         Member savedMember = memberRepository.save(member);
 
         log.info("회원가입 완료 - email: {}, id: {}", savedMember.getEmail(), savedMember.getId());
 
-        return MemberResponseDto.from(savedMember);
+        return MemberResponse.from(savedMember);
     }
 
 
     /**
      * 이메일로 회원 중복 체크
      */
-    private void validateDuplicateMember(MemberRequestDto memberRequestDto) {
-        memberRepository.findByEmail(memberRequestDto.getEmail())
+    private void validateDuplicateMember(MemberRequest memberRequest) {
+        memberRepository.findByEmail(memberRequest.email())
             .ifPresent(member -> {
                 throw new IllegalArgumentException("이미 가입된 회원입니다.");
             });
+    }
+
+    /**
+     * 회원삭제
+     */
+    @Transactional
+    public void deleteMember(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        memberRepository.delete(member);
+        log.info("회원 삭제 완료 - email: {}, id: {}", member.getEmail(), member.getId());
     }
 }
