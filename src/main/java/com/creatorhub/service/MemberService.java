@@ -3,6 +3,8 @@ package com.creatorhub.service;
 import com.creatorhub.dto.MemberRequest;
 import com.creatorhub.dto.MemberResponse;
 import com.creatorhub.entity.Member;
+import com.creatorhub.exception.DuplicateEmailException;
+import com.creatorhub.exception.MemberNotFoundException;
 import com.creatorhub.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +51,7 @@ public class MemberService {
     private void validateDuplicateMember(MemberRequest memberRequest) {
         memberRepository.findByEmail(memberRequest.email())
             .ifPresent(member -> {
-                throw new IllegalArgumentException("이미 가입된 회원입니다.");
+                throw new DuplicateEmailException();
             });
     }
 
@@ -59,7 +61,7 @@ public class MemberService {
     @Transactional
     public void deleteMember(Long memberId) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+                .orElseThrow(MemberNotFoundException::new);
 
         memberRepository.delete(member);
         log.info("회원 삭제 완료 - email: {}, id: {}", member.getEmail(), member.getId());
