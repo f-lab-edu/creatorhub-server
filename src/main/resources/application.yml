@@ -9,6 +9,7 @@ logging:
             sql: trace
     com:
       creatorhub: DEBUG
+
 spring:
   application:
     name: creatorhub-server
@@ -29,5 +30,11 @@ spring:
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/creatorhub?serverTimezone=Asia/Seoul}
     username: ${SPRING_DATASOURCE_USERNAME:root}
     password: ${SPRING_DATASOURCE_PASSWORD:1234}
+
 server:
   port: '8000'
+
+jwt:
+  secret: ${JWT_SECRET:1234567890123456789012345678901234567890}
+  access-token-exp-min: ${ACCESS_TOKEN_EXP_MIN:30}
+  refresh-token-exp-days: ${REFRESH_TOKEN_EXP_DAYS:7}
