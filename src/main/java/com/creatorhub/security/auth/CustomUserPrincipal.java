@@ -1,17 +1,11 @@
 package com.creatorhub.security.auth;
 
-import lombok.RequiredArgsConstructor;
 import java.security.Principal;
 
-
-@RequiredArgsConstructor
-public class CustomUserPrincipal implements Principal {
-
-    private final String id;
+public record CustomUserPrincipal(Long id) implements Principal {
 
     @Override
     public String getName() {
-        return id;
+        return String.valueOf(id);
     }
 }
-

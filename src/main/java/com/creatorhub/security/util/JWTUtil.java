@@ -1,5 +1,8 @@
 package com.creatorhub.security.util;
 
+import com.creatorhub.dto.RefreshTokenPayload;
+import com.creatorhub.dto.TokenPayload;
+import com.creatorhub.constant.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -35,6 +38,9 @@ public class JWTUtil {
         this.refreshTokenExpDays = refreshTokenExpDays;
     }
 
+    /**
+     * 토큰생성
+     */
     public String createToken(Map<String, Object> claims, long expireMinutes) {
 
         ZonedDateTime now = ZonedDateTime.now();
@@ -51,17 +57,20 @@ public class JWTUtil {
 
     }
 
-    public String createAccessToken(Map<String, Object> claims) {
-        return createToken(claims, accessTokenExpMinutes);
+
+    public String createAccessToken(TokenPayload payload) {
+        return createToken(payload.toClaims(), accessTokenExpMinutes);
     }
 
-    public String createRefreshToken(Long id) {
+    public String createRefreshToken(RefreshTokenPayload payload) {
         long refreshMinutes = refreshTokenExpDays * 24 * 60;
-        return createToken(Map.of("id", id), refreshMinutes);
+        return createToken(payload.toClaims(), refreshMinutes);
     }
 
-
-    public Map<String, Object> validateToken(String token) {
+    /**
+     * 토큰검증
+     */
+    public TokenPayload validateToken(String token) {
 
         Claims claims = Jwts.parser()
                 .verifyWith(secretKey)
@@ -71,7 +80,17 @@ public class JWTUtil {
 
         log.info("claims: {}", claims);
 
-        return claims;
+        Long id = claims.get("id", Long.class);
+        String name = claims.get("name", String.class);
+        String email = claims.get("email", String.class);
+        String roleStr = claims.get("role", String.class);
+
+        return new TokenPayload(
+                id,
+                name,
+                email,
+                Role.valueOf(roleStr)
+        );
 
     }
 }

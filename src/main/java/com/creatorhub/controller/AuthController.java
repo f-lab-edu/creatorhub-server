@@ -1,6 +1,7 @@
 package com.creatorhub.controller;
 
 import com.creatorhub.dto.LoginRequest;
+import com.creatorhub.dto.RefreshTokenPayload;
 import com.creatorhub.dto.TokenPayload;
 import com.creatorhub.security.util.JWTUtil;
 import com.creatorhub.service.MemberService;
@@ -8,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -28,11 +28,10 @@ public class AuthController {
 
         TokenPayload tokenPayload = memberService.authenticate(loginRequest.email(), loginRequest.password());
 
-        Long id = tokenPayload.id();
-        Map<String, Object> claims = tokenPayload.toMap();
-
-        String accessToken = jwtUtil.createAccessToken(claims);
-        String refreshToken = jwtUtil.createRefreshToken(id);
+        String accessToken = jwtUtil.createAccessToken(tokenPayload);
+        String refreshToken = jwtUtil.createRefreshToken(
+                RefreshTokenPayload.from(tokenPayload)
+        );
 
         log.debug("accessToken prefix: {}", accessToken.substring(0, 20));
 

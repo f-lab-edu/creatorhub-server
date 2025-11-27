@@ -23,12 +23,12 @@ public record TokenPayload(
     /**
      * JWT 토큰 생성에 필요한 claims를 Map으로 변환
      */
-    public Map<String, Object> toMap() {
+    public Map<String, Object> toClaims() {
         Map<String, Object> map = new HashMap<>();
         map.put("id", id);
         map.put("name", name);
         map.put("email", email);
-        map.put("role", role);
+        map.put("role", role.name()); // ENUM → String
         return map;
     }
 }

@@ -1,6 +1,8 @@
 package com.creatorhub.security.filter;
 
 import com.creatorhub.constant.ErrorCode;
+import com.creatorhub.constant.Role;
+import com.creatorhub.dto.TokenPayload;
 import com.creatorhub.security.auth.CustomUserPrincipal;
 import com.creatorhub.security.exception.JwtAuthenticationException;
 import com.creatorhub.security.util.JWTUtil;
@@ -20,8 +22,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.stream.Collectors;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -55,28 +56,27 @@ public class JWTCheckFilter extends OncePerRequestFilter {
         String accessToken = headerStr.substring(7);
 
         try {
-            java.util.Map<String, Object> tokenMap = jwtUtil.validateToken(accessToken);
+            TokenPayload payload = jwtUtil.validateToken(accessToken);
 
-            // 토큰 검증 결과에 문제 없음
-            log.info("tokenMap: {}", tokenMap);
+            log.info("TokenPayload: {}", payload);
 
-            String id = tokenMap.get("id").toString();
+            Long id = payload.id();
+            Role role = payload.role();
 
-            // 권한이 여러 개인 경우에는 ,로 구분해서 처리
-            String[] roles = tokenMap.get("role").toString().split(",");
+            // Role enum이 들고 있는 권한 세트로 GrantedAuthority 생성
+            List<SimpleGrantedAuthority> authorities = role.getAuthorities().stream()
+                    .map(SimpleGrantedAuthority::new)
+                    .toList();
 
             // 토큰 검증 결과를 이용해서 Authentication 객체를 생성
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(
                             new CustomUserPrincipal(id),
                             null,
-                            Arrays.stream(roles)
-                                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                                    .collect(Collectors.toList())
+                            authorities
                     );
 
-            // SecurityContextHolder에 Authentication 객체를 저장
-            // 이후에 SecurityContextHolder를 이용해서 Authentication 객체를 꺼내서 사용
+            // SecurityContextHolder에 Authentication 객체 저장
             SecurityContext context = SecurityContextHolder.createEmptyContext();
             context.setAuthentication(authenticationToken);
             SecurityContextHolder.setContext(context);
