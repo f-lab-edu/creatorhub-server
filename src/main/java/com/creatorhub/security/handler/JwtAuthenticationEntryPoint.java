@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.time.LocalDateTime;
 
 @Component
 @RequiredArgsConstructor
@@ -29,22 +28,15 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
         log.warn("JwtAuthenticationEntryPoint - Unauthorized: {}", authException.getMessage());
 
-        /*
-         * 예외가 뭐가 들어올지 모르는 상태에서 최소한 INVALID_TOKEN 처리
-         * 만약 JWT 관련 예외라면 JwtAuthenticationException 처리
-         */
-        ErrorCode errorCode = ErrorCode.INVALID_TOKEN;
+        // 예외가 뭐가 들어올지 모르는 상태에서 최소한 AUTHENTICATION_FAILED 처리
+        ErrorCode errorCode = ErrorCode.AUTHENTICATION_FAILED;
 
+        // 만약 JWT 관련 예외라면 JwtAuthenticationException 처리
         if (authException instanceof JwtAuthenticationException jwtEx) {
             errorCode = jwtEx.getErrorCode();
         }
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                errorCode.getCode(),
-                errorCode.getMessage(),
-                LocalDateTime.now(),
-                request.getRequestURI()
-        );
+        ErrorResponse errorResponse = ErrorResponse.of(errorCode, request.getRequestURI());
 
         response.setStatus(errorCode.getHttpStatus().value());
         response.setContentType("application/json;charset=UTF-8");

@@ -16,19 +16,39 @@ services:
     volumes:
       - ./mysql-data:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d
+    networks:
+      - creatorhub-network
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    command: [ "redis-server", "--appendonly", "yes" ]
+    volumes:
+      - redis-data:/data
+    networks:
+      - creatorhub-network
+    restart: always
 
   app:
     build: .
     container_name: creatorhub-app
     depends_on:
       - mysql
+      - redis
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://creatorhub-mysql:3306/creatorhub?serverTimezone=Asia/Seoul
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: 1234
     ports:
       - "8000:8000"
+    networks:
+      - creatorhub-network
+
+volumes:
+  redis-data:
 
 networks:
-  default:
+  creatorhub-network:
     name: creatorhub-network

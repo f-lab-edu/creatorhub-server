@@ -18,29 +18,33 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
 
-@Component
 @RequiredArgsConstructor
 @Slf4j
 public class JWTCheckFilter extends OncePerRequestFilter {
     private final JWTUtil jwtUtil;
+    private final AuthenticationEntryPoint authenticationEntryPoint;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getServletPath();
 
         // 토큰 없이 접근 허용할 경로들
-        return path.startsWith("/api/auth")          // 토큰 발급
-                || path.equals("/api/members/signup");     // 회원가입
+        return path.equals("/api/auth/login")          // 로그인
+                || path.equals("/api/auth/refresh")    // 토큰 재발급
+                || path.equals("/api/members/signup"); // 회원가입
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
 
         log.info("JWTCheckFilter doFilter............ ");
         log.info("requestURI: {}", request.getRequestURI());
@@ -48,14 +52,34 @@ public class JWTCheckFilter extends OncePerRequestFilter {
         String headerStr = request.getHeader("Authorization");
         log.info("headerStr: {}", headerStr);
 
-        // Access Token이 없는 경우
-        if (headerStr == null || !headerStr.startsWith("Bearer ")) {
-            throw new JwtAuthenticationException(ErrorCode.INVALID_TOKEN);
+        // 1) Access Token이 없는 경우 → 바로 EntryPoint 호출하고 끝
+//        if (headerStr == null || !headerStr.startsWith("Bearer ")) {
+//            JwtAuthenticationException authEx =
+//                    new JwtAuthenticationException(ErrorCode.INVALID_TOKEN);
+//
+//            authenticationEntryPoint.commence(request, response, authEx);
+//            return; // 더 이상 체인 타지 않도록 종료
+//        }
+
+        // 1) Authorization 헤더가 아예 없으면 → JWT 검사는 건너뛰고 다음으로 넘김
+        //    (이 경우, 나중에 인가 단계에서 401 / 혹은 404 처리가 이뤄짐)
+        if (headerStr == null || headerStr.isBlank()) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 2) 형식은 있는데 Bearer로 안시작하면 → 잘못된 토큰 형식으로 처리
+        if (!headerStr.startsWith("Bearer ")) {
+            JwtAuthenticationException authEx =
+                    new JwtAuthenticationException(ErrorCode.INVALID_TOKEN);
+            authenticationEntryPoint.commence(request, response, authEx);
+            return; // 더 이상 체인 타지 않도록 종료
         }
 
         String accessToken = headerStr.substring(7);
 
         try {
+            // 2) Access Token 검증
             TokenPayload payload = jwtUtil.validateToken(accessToken);
 
             log.info("TokenPayload: {}", payload);
@@ -63,12 +87,12 @@ public class JWTCheckFilter extends OncePerRequestFilter {
             Long id = payload.id();
             Role role = payload.role();
 
-            // Role enum이 들고 있는 권한 세트로 GrantedAuthority 생성
+            // 3) Role enum 이 들고 있는 권한 세트로 GrantedAuthority 생성
             List<SimpleGrantedAuthority> authorities = role.getAuthorities().stream()
                     .map(SimpleGrantedAuthority::new)
                     .toList();
 
-            // 토큰 검증 결과를 이용해서 Authentication 객체를 생성
+            // 4) Authentication 객체 생성
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(
                             new CustomUserPrincipal(id),
@@ -76,17 +100,31 @@ public class JWTCheckFilter extends OncePerRequestFilter {
                             authorities
                     );
 
-            // SecurityContextHolder에 Authentication 객체 저장
+            // 5) SecurityContextHolder에 Authentication 객체 저장
             SecurityContext context = SecurityContextHolder.createEmptyContext();
             context.setAuthentication(authenticationToken);
             SecurityContextHolder.setContext(context);
 
+            // 6) 다음 필터로 진행
             filterChain.doFilter(request, response);
 
         } catch (ExpiredJwtException e) {
-            throw new JwtAuthenticationException(ErrorCode.EXPIRE_TOKEN, e);
+            log.warn("JWTCheckFilter - ExpiredJwtException 발생", e);
+
+            JwtAuthenticationException authEx =
+                    new JwtAuthenticationException(ErrorCode.EXPIRE_TOKEN, e);
+
+            authenticationEntryPoint.commence(request, response, authEx);
+            return;
+
         } catch (JwtException e) {
-            throw new JwtAuthenticationException(ErrorCode.INVALID_TOKEN, e);
+            log.warn("JWTCheckFilter - JwtException 발생, INVALID_TOKEN 응답", e);
+
+            JwtAuthenticationException authEx =
+                    new JwtAuthenticationException(ErrorCode.INVALID_TOKEN, e);
+
+            authenticationEntryPoint.commence(request, response, authEx);
+            return;
         }
     }
 }

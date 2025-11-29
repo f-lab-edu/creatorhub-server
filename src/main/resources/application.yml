@@ -30,6 +30,13 @@ spring:
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/creatorhub?serverTimezone=Asia/Seoul}
     username: ${SPRING_DATASOURCE_USERNAME:root}
     password: ${SPRING_DATASOURCE_PASSWORD:1234}
+  data:
+    redis:
+      # host: redis   # Spring Boot Docker 컨테이너 + Redis 도커
+      host: localhost   # Spring Boot IDE에서 실행 + Redis 도커
+      port: 6379
+      # password: 설정 안 했으면 생략
+      timeout: 2000
 
 server:
   port: '8000'

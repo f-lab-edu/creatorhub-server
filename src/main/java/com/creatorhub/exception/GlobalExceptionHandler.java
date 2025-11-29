@@ -2,6 +2,7 @@ package com.creatorhub.exception;
 
 import com.creatorhub.constant.ErrorCode;
 import com.creatorhub.dto.ErrorResponse;
+import com.creatorhub.security.exception.JwtAuthenticationException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -10,10 +11,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import org.springframework.web.servlet.NoHandlerFoundException;
 import java.util.Objects;
 
 @Slf4j
@@ -28,15 +26,8 @@ public class GlobalExceptionHandler {
             MemberException ex,
             HttpServletRequest request) {
         
-        log.warn("MemberException occurred - Code: {}, Message: {}", 
-                ex.getErrorCode().getCode(), ex.getMessage());
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                ex.getErrorCode().getCode(),
-                ex.getMessage(),
-                LocalDateTime.now(),
-                request.getRequestURI()
-        );
+        log.warn("MemberException occurred - Message: {}", ex.getMessage());
+        ErrorResponse errorResponse = ErrorResponse.of(ex.getErrorCode(), request.getRequestURI());
 
         return ResponseEntity
                 .status(ex.getErrorCode().getHttpStatus())
@@ -55,13 +46,7 @@ public class GlobalExceptionHandler {
                         .getDefaultMessage();
         
         log.warn("Validation failed - Message: {}", message);
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                ErrorCode.INVALID_REQUEST.getCode(),
-                message,
-                LocalDateTime.now(),
-                request.getRequestURI()
-        );
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.INVALID_REQUEST.getCode(), message, request.getRequestURI());
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
@@ -77,16 +62,26 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         log.warn("handleAccessDeniedException occurred - Message: {}", ex.getMessage());
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                ErrorCode.ACCESS_DENIED.getCode(),
-                ErrorCode.ACCESS_DENIED.getMessage(),
-                LocalDateTime.now(),
-                request.getRequestURI()
-        );
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.ACCESS_DENIED, request.getRequestURI());
 
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
+                .body(errorResponse);
+    }
+
+    /**
+     * JWT 토큰 관련 예외 처리
+     */
+    @ExceptionHandler(JwtAuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleJwtAuthenticationException(
+            JwtAuthenticationException ex,
+            HttpServletRequest request) {
+
+        log.warn("handleJwtAuthenticationException occurred - Message: {}", ex.getMessage());
+        ErrorResponse errorResponse = ErrorResponse.of(ex.getErrorCode(), request.getRequestURI());
+
+        return ResponseEntity
+                .status(ex.getErrorCode().getHttpStatus())
                 .body(errorResponse);
     }
 
@@ -99,16 +94,26 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
         
         log.error("Unexpected exception occurred", ex);
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                ErrorCode.INTERNAL_SERVER_ERROR.getCode(),
-                ErrorCode.INTERNAL_SERVER_ERROR.getMessage(),
-                LocalDateTime.now(),
-                request.getRequestURI()
-        );
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR, request.getRequestURI());
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(errorResponse);
+    }
+
+    /**
+     * 경로 관련 예외처리
+     */
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoHandlerFoundException(
+            NoHandlerFoundException ex,
+            HttpServletRequest request) {
+
+        log.warn("handleNoHandlerFoundException occurred - Message: {}", ex.getMessage());
+        ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.INVALID_PATH, request.getRequestURI());
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
                 .body(errorResponse);
     }
 }

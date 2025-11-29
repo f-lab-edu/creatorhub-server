@@ -38,8 +38,24 @@ public class JWTUtil {
         this.refreshTokenExpDays = refreshTokenExpDays;
     }
 
+
     /**
-     * 토큰생성
+     * Access 토큰생성
+     */
+    public String createAccessToken(TokenPayload payload) {
+        return createToken(payload.toClaims(), accessTokenExpMinutes);
+    }
+
+    /**
+     * Refresh 토큰생성
+     */
+    public String createRefreshToken(RefreshTokenPayload payload) {
+        long refreshMinutes = refreshTokenExpDays * 24 * 60;
+        return createToken(payload.toClaims(), refreshMinutes);
+    }
+
+    /**
+     * 공통 토큰생성
      */
     public String createToken(Map<String, Object> claims, long expireMinutes) {
 
@@ -57,28 +73,24 @@ public class JWTUtil {
 
     }
 
-
-    public String createAccessToken(TokenPayload payload) {
-        return createToken(payload.toClaims(), accessTokenExpMinutes);
-    }
-
-    public String createRefreshToken(RefreshTokenPayload payload) {
-        long refreshMinutes = refreshTokenExpDays * 24 * 60;
-        return createToken(payload.toClaims(), refreshMinutes);
-    }
-
     /**
-     * 토큰검증
+     * 공통 Claims 파싱 (서명/만료 검증 포함)
      */
-    public TokenPayload validateToken(String token) {
-
-        Claims claims = Jwts.parser()
+    private Claims parseClaims(String token) {
+        return Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
 
-        log.info("claims: {}", claims);
+    /**
+     * Access 토큰검증
+     */
+    public TokenPayload validateToken(String token) {
+
+        Claims claims = parseClaims(token);
+        log.debug("access token claims: {}", claims);
 
         Long id = claims.get("id", Long.class);
         String name = claims.get("name", String.class);
@@ -92,5 +104,18 @@ public class JWTUtil {
                 Role.valueOf(roleStr)
         );
 
+    }
+
+    /**
+     * Refresh 토큰 검증
+     */
+    public RefreshTokenPayload validateRefreshToken(String token) {
+
+        Claims claims = parseClaims(token);
+        log.debug("refresh token claims: {}", claims);
+
+        Long id = claims.get("id", Long.class);
+
+        return new RefreshTokenPayload(id);
     }
 }

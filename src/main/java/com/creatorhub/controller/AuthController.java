@@ -1,49 +1,49 @@
 package com.creatorhub.controller;
 
-import com.creatorhub.dto.LoginRequest;
-import com.creatorhub.dto.RefreshTokenPayload;
-import com.creatorhub.dto.TokenPayload;
-import com.creatorhub.security.util.JWTUtil;
-import com.creatorhub.service.MemberService;
+import com.creatorhub.dto.*;
+import com.creatorhub.security.auth.CustomUserPrincipal;
+import com.creatorhub.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Slf4j
 public class AuthController {
-    private final MemberService memberService;
-    private final JWTUtil jwtUtil;
+    private final AuthService authService;
 
-    @PostMapping("/make")
-    public ResponseEntity<Map<String, String>> makeToken(@RequestBody LoginRequest loginRequest) {
-
-        log.info("makeToken............");
-
-        TokenPayload tokenPayload = memberService.authenticate(loginRequest.email(), loginRequest.password());
-
-        String accessToken = jwtUtil.createAccessToken(tokenPayload);
-        String refreshToken = jwtUtil.createRefreshToken(
-                RefreshTokenPayload.from(tokenPayload)
-        );
-
-        log.debug("accessToken prefix: {}", accessToken.substring(0, 20));
-
-        // 확인용(삭제 예정)
-        log.info("accessToken: {}", accessToken);
-        log.info("refreshToken: {}", refreshToken);
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(Map.of(
-                        "accessToken", accessToken,
-                        "refreshToken", refreshToken
-                ));
+    /**
+     * 로그인
+     */
+    @PostMapping("/login")
+    public ResponseEntity<TokenPair> login(@RequestBody LoginRequest request) {
+        log.info("로그인 요청 - email={}", request.email());
+        TokenPair tokenPair = authService.login(request.email(), request.password());
+        return ResponseEntity.ok(tokenPair);
     }
+
+    /**
+     * refresh 토큰 재발급
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenPair> refresh(@RequestBody RefreshRequest request) {
+        log.info("토큰 재발급 요청");
+        TokenPair tokenPair = authService.refresh(request.refreshToken());
+        return ResponseEntity.ok(tokenPair);
+    }
+
+    /**
+     * 로그아웃
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@AuthenticationPrincipal CustomUserPrincipal principal) {
+        Long id = principal.id();
+        log.info("로그아웃 요청 - id={}", id);
+        authService.logout(id);
+        return ResponseEntity.noContent().build();
+   }
 }

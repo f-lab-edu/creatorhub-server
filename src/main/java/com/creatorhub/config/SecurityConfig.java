@@ -2,6 +2,7 @@ package com.creatorhub.config;
 
 import com.creatorhub.security.filter.JWTCheckFilter;
 import com.creatorhub.security.handler.JwtAuthenticationEntryPoint;
+import com.creatorhub.security.util.JWTUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -20,8 +21,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private final JWTCheckFilter jwtCheckFilter;
+    private final JWTUtil jwtUtil;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+
+    @Bean
+    public JWTCheckFilter jwtCheckFilter() {
+        return new JWTCheckFilter(jwtUtil, jwtAuthenticationEntryPoint);
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
@@ -47,11 +53,11 @@ public class SecurityConfig {
         );
 
         // JWTCheckFilter를 UsernamePasswordAuthenticationFilter보다 먼저 실행하도록 등록
-        httpSecurity.addFilterBefore(jwtCheckFilter, UsernamePasswordAuthenticationFilter.class);
+        httpSecurity.addFilterBefore(jwtCheckFilter(), UsernamePasswordAuthenticationFilter.class);
 
         // 나머지 인가 설정
         httpSecurity.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/api/members/signup").permitAll()
+                .requestMatchers("/api/auth/login", "/api/auth/refresh", "/api/members/signup", "/error").permitAll()
                 .anyRequest().authenticated()
         );
         return httpSecurity.build();
