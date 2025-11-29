@@ -47,5 +47,5 @@ docker compose up -d mysql
 MySQL과 Spring Boot 앱을 모두 Docker로 실행하는 방식입니다.
 ```bash
 docker compose up -d mysql
-docker compose up -d --build
+docker compose up -d app --build
 ```
