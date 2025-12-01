@@ -37,7 +37,8 @@ creatorhub-server/
 ## 🐳 3. Docker 기반 실행
 
 MySQL DB, Redis, Spring Boot 앱(creatorhub-server)을 Docker Compose를 통해 각각 실행할 수 있습니다.
-만약 Spring Boot 앱을 IDE에서 실행한다면 MySQL과 Redis만 Docker로 실행하면 됩니다.
+<br/>
+만약 Spring Boot 앱을 IDE에서 실행한다면 MySQL, Redis만 Docker로 실행하면 됩니다.
 
 ### 🔹 MySQL, Redis, Spring Boot 앱 실행
 ```bash
