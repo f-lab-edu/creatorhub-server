@@ -25,9 +25,11 @@ creatorhub-server/
 │  └─ main/
 │     └─ resources/
 │        ├─ application.yml
-│        └─ application-test.yml
+│        └─ application-test.yml # 테스트 코드용 
 ├─ docker-compose.yml
 ├─ Dockerfile
+├─ creatorhub-dev.env # 개발용 환경변수
+├─ creatorhub-prod.env # 배포용 환경변수
 ├─ mysql-data/       # MySQL 데이터 (자동 생성)
 └─ mysql-init/       # 초기 테스트용 DB 생성 스크립트
 ```
@@ -36,14 +38,16 @@ creatorhub-server/
 
 ## 🐳 3. Docker 기반 실행
 
-MySQL DB, Redis, Spring Boot 앱(creatorhub-server)을 Docker Compose를 통해 각각 실행할 수 있습니다.
+MySQL DB, Redis, Spring Boot 앱(creatorhub-server)을 Docker Compose를 통해 각각 실행할 수 있습니다. 환경변수는 creatorhub-prod.env 파일을 사용합니다.
 <br/>
+
 만약 Spring Boot 앱을 IDE에서 실행한다면 MySQL, Redis만 Docker로 실행하면 됩니다.
+
 
 ### 🔹 MySQL, Redis, Spring Boot 앱 실행
 ```bash
 docker compose up -d mysql
 docker compose up -d redis
-docker compose up -d app --build
+docker compose --env-file creatorhub-prod.env up -d app --build
 ```
 
