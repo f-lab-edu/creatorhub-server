@@ -19,45 +19,48 @@ import java.util.Map;
 @Component
 @Slf4j
 public class JWTUtil {
-    private final SecretKey secretKey;
+    private final SecretKey accessSecretKey;
+    private final SecretKey refreshSecretKey;
     private final long accessTokenExpMinutes;
     private final long refreshTokenExpDays;
 
     public JWTUtil(
-            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.access-secret}") String accessSecret,
+            @Value("${jwt.refresh-secret}") String refreshSecret,
             @Value("${jwt.access-token-exp-min}") long accessTokenExpMinutes,
             @Value("${jwt.refresh-token-exp-days}") long refreshTokenExpDays
     ) {
         try {
-            this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+            this.accessSecretKey = Keys.hmacShaKeyFor(accessSecret.getBytes(StandardCharsets.UTF_8));
+            this.refreshSecretKey = Keys.hmacShaKeyFor(refreshSecret.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             log.error("Failed to initialize JWT secret key", e);
             throw new IllegalStateException("JWT secret key 초기화 실패", e);
         }
+
         this.accessTokenExpMinutes = accessTokenExpMinutes;
         this.refreshTokenExpDays = refreshTokenExpDays;
     }
 
-
     /**
-     * Access 토큰생성
+     * Access 토큰 생성
      */
     public String createAccessToken(TokenPayload payload) {
-        return createToken(payload.toClaims(), accessTokenExpMinutes);
+        return createToken(payload.toClaims(), accessTokenExpMinutes, accessSecretKey);
     }
 
     /**
-     * Refresh 토큰생성
+     * Refresh 토큰 생성
      */
     public String createRefreshToken(RefreshTokenPayload payload) {
         long refreshMinutes = refreshTokenExpDays * 24 * 60;
-        return createToken(payload.toClaims(), refreshMinutes);
+        return createToken(payload.toClaims(), refreshMinutes, refreshSecretKey);
     }
 
     /**
-     * 공통 토큰생성
+     * 공통 토큰 생성
      */
-    public String createToken(Map<String, Object> claims, long expireMinutes) {
+    private String createToken(Map<String, Object> claims, long expireMinutes, SecretKey key) {
 
         ZonedDateTime now = ZonedDateTime.now();
 
@@ -66,30 +69,29 @@ public class JWTUtil {
                 .add("alg", "HS256")
                 .and()
                 .issuedAt(Date.from(now.toInstant()))
-                .expiration((Date.from(now.plusMinutes(expireMinutes).toInstant())))
+                .expiration(Date.from(now.plusMinutes(expireMinutes).toInstant()))
                 .claims(claims)
-                .signWith(secretKey)
+                .signWith(key)
                 .compact();
-
     }
 
     /**
      * 공통 Claims 파싱 (서명/만료 검증 포함)
      */
-    private Claims parseClaims(String token) {
+    private Claims parseClaims(String token, SecretKey key) {
         return Jwts.parser()
-                .verifyWith(secretKey)
+                .verifyWith(key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
     }
 
     /**
-     * Access 토큰검증
+     * Access 토큰 검증
      */
     public TokenPayload validateToken(String token) {
 
-        Claims claims = parseClaims(token);
+        Claims claims = parseClaims(token, accessSecretKey);
         log.debug("access token claims: {}", claims);
 
         Long id = claims.get("id", Long.class);
@@ -103,7 +105,6 @@ public class JWTUtil {
                 email,
                 Role.valueOf(roleStr)
         );
-
     }
 
     /**
@@ -111,7 +112,7 @@ public class JWTUtil {
      */
     public RefreshTokenPayload validateRefreshToken(String token) {
 
-        Claims claims = parseClaims(token);
+        Claims claims = parseClaims(token, refreshSecretKey);
         log.debug("refresh token claims: {}", claims);
 
         Long id = claims.get("id", Long.class);
