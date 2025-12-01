@@ -14,7 +14,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -74,6 +73,7 @@ public class MemberService {
     /**
      * 비밀번호 인증 후 회원정보 가져옴
      */
+    @Transactional(readOnly = true)
     public TokenPayload authenticate(String email, String rawPassword) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(MemberNotFoundException::new);
