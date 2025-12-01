@@ -39,3 +39,6 @@ out/
 ### docker volumes ###
 mysql-data/
 redis-data/
+
+### env ###
+*.env

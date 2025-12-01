@@ -45,7 +45,6 @@ public class AuthService {
 
     /**
      * Refresh 토큰 기반 재발급
-     * (accessToken은 옵션으로 검증에 쓸 수 있지만 여기선 refresh만 사용)
      */
     public TokenPair refresh(String refreshToken) {
 
@@ -83,7 +82,7 @@ public class AuthService {
     }
 
     /**
-     * 로그아웃 (선택)
+     * 로그아웃
      */
     public void logout(Long id) {
         refreshTokenService.deleteRefreshToken(id);

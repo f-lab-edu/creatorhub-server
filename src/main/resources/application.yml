@@ -11,6 +11,8 @@ logging:
       creatorhub: DEBUG
 
 spring:
+  config:
+    import: optional:file:creatorhub-dev.env[.properties]
   application:
     name: creatorhub-server
   jpa:
@@ -27,9 +29,9 @@ spring:
     database-platform: org.hibernate.dialect.MySQLDialect
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/creatorhub?serverTimezone=Asia/Seoul}
-    username: ${SPRING_DATASOURCE_USERNAME:root}
-    password: ${SPRING_DATASOURCE_PASSWORD:1234}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
   data:
     redis:
       # host: redis   # Spring Boot Docker 컨테이너 + Redis 도커
@@ -42,6 +44,7 @@ server:
   port: '8000'
 
 jwt:
-  secret: ${JWT_SECRET:1234567890123456789012345678901234567890}
-  access-token-exp-min: ${ACCESS_TOKEN_EXP_MIN:30}
-  refresh-token-exp-days: ${REFRESH_TOKEN_EXP_DAYS:7}
+  access-secret: ${JWT_ACCESS_SECRET}
+  refresh-secret: ${JWT_REFRESH_SECRET}
+  access-token-exp-min: ${ACCESS_TOKEN_EXP_MIN}
+  refresh-token-exp-days: ${REFRESH_TOKEN_EXP_DAYS}
