@@ -40,5 +40,5 @@ out/
 mysql-data/
 redis-data/
 
-### env ###
-*.env
+### secret.yml 파일을 무시 ###
+src/main/resources/*-secret.yml

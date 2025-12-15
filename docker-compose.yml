@@ -5,7 +5,7 @@ services:
     image: mysql:8.0
     container_name: creatorhub-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: creatorhub
     ports:
       - "3306:3306"
@@ -43,8 +43,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      ACCESS_TOKEN_EXP_MIN: ${ACCESS_TOKEN_EXP_MIN}
-      REFRESH_TOKEN_EXP_DAYS: ${REFRESH_TOKEN_EXP_DAYS}
+      ACCESS_TOKEN_EXP_MIN: 30
+      REFRESH_TOKEN_EXP_DAYS: 7
     ports:
       - "8000:8000"
     networks:

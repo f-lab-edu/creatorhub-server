@@ -28,8 +28,6 @@ creatorhub-server/
 │        └─ application-test.yml # 테스트 코드용 
 ├─ docker-compose.yml
 ├─ Dockerfile
-├─ creatorhub-dev.env # 개발용 환경변수
-├─ creatorhub-prod.env # 배포용 환경변수
 ├─ mysql-data/       # MySQL 데이터 (자동 생성)
 └─ mysql-init/       # 초기 테스트용 DB 생성 스크립트
 ```
@@ -45,9 +43,20 @@ MySQL DB, Redis, Spring Boot 앱(creatorhub-server)을 Docker Compose를 통해 
 
 
 ### 🔹 MySQL, Redis, Spring Boot 앱 실행
+- 모든 민감한 설정 값은 실행 시 환경변수로 주입합니다.  
+-  Windows 환경에서는 WSL 사용을 권장합니다.
+
 ```bash
 docker compose up -d mysql
-docker compose up -d redis
-docker compose --env-file creatorhub-prod.env up -d app --build
 ```
-
+```bash
+docker compose up -d redis
+```
+```bash
+MYSQL_ROOT_PASSWORD="password" \
+SPRING_DATASOURCE_URL="jdbc:mysql://mysql:3306/creatorhub?serverTimezone=Asia/Seoul" \
+SPRING_DATASOURCE_PASSWORD="password" \
+JWT_ACCESS_SECRET="your-access-secret" \
+JWT_REFRESH_SECRET="your-refresh-secret" \
+docker compose up -d app --build
+```
