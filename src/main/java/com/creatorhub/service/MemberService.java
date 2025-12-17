@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
@@ -25,7 +24,6 @@ public class MemberService {
     /**
      * 회원가입
      */
-    @Transactional
     public MemberResponse signup(MemberRequest memberRequest) {
         // 이메일 중복 체크
         validateDuplicateMember(memberRequest);
@@ -61,7 +59,6 @@ public class MemberService {
     /**
      * 회원삭제
      */
-    @Transactional
     public void deleteMember(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(MemberNotFoundException::new);
@@ -73,7 +70,6 @@ public class MemberService {
     /**
      * 비밀번호 인증 후 회원정보 가져옴
      */
-    @Transactional(readOnly = true)
     public TokenPayload authenticate(String email, String rawPassword) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(MemberNotFoundException::new);
