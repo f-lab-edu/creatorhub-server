@@ -20,11 +20,12 @@ public class Creator extends BaseTimeEntity {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id")
+    @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    @Column(length = 1000)
-    private String profileImageUrl;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "file_object_id", nullable = false)
+    private FileObject fileObject;
 
     @Column(nullable = false, length = 150)
     private String creatorName;
@@ -34,22 +35,22 @@ public class Creator extends BaseTimeEntity {
 
     @Builder(access = AccessLevel.PRIVATE)
     private Creator(Member member,
-                    String profileImageUrl,
+                    FileObject fileObject,
                     String creatorName,
                     String introduction) {
         this.member = member;
-        this.profileImageUrl = profileImageUrl;
+        this.fileObject = fileObject;
         this.creatorName = creatorName;
         this.introduction = introduction;
     }
 
     public static Creator createCreator(Member member,
-                                        String profileImageUrl,
+                                        FileObject fileObject,
                                         String creatorName,
                                         String introduction) {
         return Creator.builder()
                 .member(member)
-                .profileImageUrl(profileImageUrl)
+                .fileObject(fileObject)
                 .creatorName((creatorName != null) ? creatorName : member.getName()) // 필명이 없을시 기존 회원가입 name 사용
                 .introduction(introduction)
                 .build();
