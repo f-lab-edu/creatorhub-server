@@ -78,4 +78,8 @@ public class Member extends BaseTimeEntity {
                 .role(Role.MEMBER)
                 .build();
     }
+
+    public void changeRole(Role role) {
+        this.role = role;
+    }
 }

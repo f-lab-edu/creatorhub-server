@@ -24,13 +24,13 @@ public class Creator extends BaseTimeEntity {
     private Member member;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "file_object_id", nullable = false)
+    @JoinColumn(name = "file_object_id")
     private FileObject fileObject;
 
     @Column(nullable = false, length = 150)
     private String creatorName;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(length = 300)
     private String introduction;
 
     @Builder(access = AccessLevel.PRIVATE)
@@ -45,12 +45,12 @@ public class Creator extends BaseTimeEntity {
     }
 
     public static Creator createCreator(Member member,
-                                        FileObject fileObject,
+//                                        FileObject fileObject,
                                         String creatorName,
                                         String introduction) {
         return Creator.builder()
                 .member(member)
-                .fileObject(fileObject)
+//                .fileObject(fileObject)
                 .creatorName((creatorName != null) ? creatorName : member.getName()) // 필명이 없을시 기존 회원가입 name 사용
                 .introduction(introduction)
                 .build();
