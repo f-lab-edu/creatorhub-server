@@ -36,5 +36,9 @@ out/
 ### VS Code ###
 .vscode/
 
-### mysql ###
+### docker volumes ###
 mysql-data/
+redis-data/
+
+### secret.yml 파일을 무시 ###
+src/main/resources/*-secret.yml

@@ -10,7 +10,8 @@
 - JDK 21
 - Spring Boot 3.5.7
 - MySQL 8.0
-- Docker, Docker Compose
+- Redis 7.2-alpine
+- Docker
 - Gradle 8.14.3
 - IntelliJ IDEA
 
@@ -19,33 +20,43 @@
 ## 📦 2. 프로젝트 구조
 
 ```shell
-project/
+creatorhub-server/
 ├─ src/
+│  └─ main/
+│     └─ resources/
+│        ├─ application.yml
+│        └─ application-test.yml # 테스트 코드용 
 ├─ docker-compose.yml
 ├─ Dockerfile
-├─ application.yml
-├─ mysql-data/ # MySQL 데이터 (자동 생성)
-└─ mysql-init/ # 초기 테스트용 DB 생성 스크립트
+├─ mysql-data/       # MySQL 데이터 (자동 생성)
+└─ mysql-init/       # 초기 테스트용 DB 생성 스크립트
 ```
 
 ---
 
 ## 🐳 3. Docker 기반 실행
 
-Docker의 MySQL DB와 Spring Boot 앱(creatorhub-server)을 다음 두 가지 방식으로 실행할 수 있습니다.
+MySQL DB, Redis, Spring Boot 앱(creatorhub-server)을 Docker Compose를 통해 각각 실행할 수 있습니다. 환경변수는 creatorhub-prod.env 파일을 사용합니다.
+<br/>
 
-### 🔹 방법 1) Docker MySQL + IDE(인텔리제이) 앱 실행
+만약 Spring Boot 앱을 IDE에서 실행한다면 MySQL, Redis만 Docker로 실행하면 됩니다.
 
-MySQL만 Docker로 실행하고, Spring Boot 앱은 IDE에서 실행하는 방식입니다.
+
+### 🔹 MySQL, Redis, Spring Boot 앱 실행
+- 모든 민감한 설정 값은 실행 시 환경변수로 주입합니다.  
+-  Windows 환경에서는 WSL 사용을 권장합니다.
 
 ```bash
 docker compose up -d mysql
 ```
-
-### 🔹 방법 2) Docker MySQL + Docker Spring Boot 앱 실행 (전체 Docker 실행)
-
-MySQL과 Spring Boot 앱을 모두 Docker로 실행하는 방식입니다.
 ```bash
-docker compose up -d mysql
-docker compose up -d --build
+docker compose up -d redis
+```
+```bash
+MYSQL_ROOT_PASSWORD="password" \
+SPRING_DATASOURCE_URL="jdbc:mysql://mysql:3306/creatorhub?serverTimezone=Asia/Seoul" \
+SPRING_DATASOURCE_PASSWORD="password" \
+JWT_ACCESS_SECRET="your-access-secret" \
+JWT_REFRESH_SECRET="your-refresh-secret" \
+docker compose up -d app --build
 ```

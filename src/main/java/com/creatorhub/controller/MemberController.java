@@ -17,8 +17,7 @@ public class MemberController {
     private final MemberService memberService;
 
     /**
-     * 회원가입 API
-     * POST /api/members/signup
+     * 회원가입
      */
     @PostMapping("/signup")
     public ResponseEntity<MemberResponse> signup(@Valid @RequestBody MemberRequest memberRequest) {

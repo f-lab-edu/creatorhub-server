@@ -5,7 +5,7 @@ services:
     image: mysql:8.0
     container_name: creatorhub-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: creatorhub
     ports:
       - "3306:3306"
@@ -16,19 +16,43 @@ services:
     volumes:
       - ./mysql-data:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d
+    networks:
+      - creatorhub-network
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    command: [ "redis-server", "--appendonly", "yes" ]
+    volumes:
+      - redis-data:/data
+    networks:
+      - creatorhub-network
+    restart: always
 
   app:
     build: .
     container_name: creatorhub-app
     depends_on:
       - mysql
+      - redis
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://creatorhub-mysql:3306/creatorhub?serverTimezone=Asia/Seoul
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      ACCESS_TOKEN_EXP_MIN: 30
+      REFRESH_TOKEN_EXP_DAYS: 7
     ports:
       - "8000:8000"
+    networks:
+      - creatorhub-network
+
+volumes:
+  redis-data:
 
 networks:
-  default:
+  creatorhub-network:
     name: creatorhub-network

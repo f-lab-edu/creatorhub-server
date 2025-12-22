@@ -1,5 +1,6 @@
 package com.creatorhub.dto;
 
+import com.creatorhub.constant.ErrorCode;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.LocalDateTime;
 
@@ -9,4 +10,22 @@ public record ErrorResponse(
         String message,
         LocalDateTime timestamp,
         String path
-) {}
+) {
+    public static ErrorResponse of(ErrorCode errorCode, String path) {
+        return new ErrorResponse(
+                errorCode.getCode(),
+                errorCode.getMessage(),
+                LocalDateTime.now(),
+                path
+        );
+    }
+
+    public static ErrorResponse of(String errorCode, String errorMessage, String path) {
+        return new ErrorResponse(
+                errorCode,
+                errorMessage,
+                LocalDateTime.now(),
+                path
+        );
+    }
+}

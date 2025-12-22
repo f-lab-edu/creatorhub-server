@@ -2,15 +2,17 @@ package com.creatorhub.service;
 
 import com.creatorhub.dto.MemberRequest;
 import com.creatorhub.dto.MemberResponse;
+import com.creatorhub.dto.TokenPayload;
 import com.creatorhub.entity.Member;
 import com.creatorhub.exception.DuplicateEmailException;
+import com.creatorhub.exception.InvalidPasswordException;
 import com.creatorhub.exception.MemberNotFoundException;
 import com.creatorhub.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +24,6 @@ public class MemberService {
     /**
      * 회원가입
      */
-    @Transactional
     public MemberResponse signup(MemberRequest memberRequest) {
         // 이메일 중복 체크
         validateDuplicateMember(memberRequest);
@@ -58,12 +59,27 @@ public class MemberService {
     /**
      * 회원삭제
      */
-    @Transactional
     public void deleteMember(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(MemberNotFoundException::new);
 
         memberRepository.delete(member);
         log.info("회원 삭제 완료 - email: {}, id: {}", member.getEmail(), member.getId());
+    }
+
+    /**
+     * 비밀번호 인증 후 회원정보 가져옴
+     */
+    public TokenPayload authenticate(String email, String rawPassword) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(MemberNotFoundException::new);
+
+        if (!passwordEncoder.matches(rawPassword, member.getPassword())) {
+            throw new InvalidPasswordException();
+        }
+
+        log.info("회원 인증 완료 - email: {}, id: {}", member.getEmail(), member.getId());
+
+        return TokenPayload.from(member);
     }
 }

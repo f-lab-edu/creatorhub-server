@@ -9,7 +9,10 @@ logging:
             sql: trace
     com:
       creatorhub: DEBUG
+
 spring:
+  config:
+    import: application-secret.yml
   application:
     name: creatorhub-server
   jpa:
@@ -26,8 +29,17 @@ spring:
     database-platform: org.hibernate.dialect.MySQLDialect
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/creatorhub?serverTimezone=Asia/Seoul}
-    username: ${SPRING_DATASOURCE_USERNAME:root}
-    password: ${SPRING_DATASOURCE_PASSWORD:1234}
+  data:
+    redis:
+      # host: redis   # Spring Boot Docker 컨테이너 + Redis 도커
+      host: localhost   # Spring Boot IDE에서 실행 + Redis 도커
+      port: 6379
+      # password: 우선 생략(미설정)
+      timeout: 2000
+
 server:
   port: '8000'
+
+jwt:
+  access-token-exp-min: 30
+  refresh-token-exp-days: 7
