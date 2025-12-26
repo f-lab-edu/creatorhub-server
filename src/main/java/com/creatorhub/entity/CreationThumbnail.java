@@ -34,7 +34,7 @@ public class CreationThumbnail extends BaseTimeEntity {
     private FileObject fileObject;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
+    @Column(nullable = false, length = 30, columnDefinition = "VARCHAR(30)")
     private CreationThumbnailType type;
 
     @Column(name = "display_order", nullable = false)

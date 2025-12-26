@@ -1,5 +1,6 @@
 package com.creatorhub.entity;
 
+import com.creatorhub.constant.FileObjectStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -30,6 +31,10 @@ public class FileObject extends BaseTimeEntity {
     @Column(length = 255)
     private String originalFilename;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30, columnDefinition = "VARCHAR(30)")
+    private FileObjectStatus status;
+
     @Column(nullable = false, length = 100)
     private String contentType;
 
@@ -43,12 +48,14 @@ public class FileObject extends BaseTimeEntity {
     @Builder(access = AccessLevel.PRIVATE)
     private FileObject(String storageKey,
                        String originalFilename,
+                       FileObjectStatus status,
                        String contentType,
                        Long sizeBytes,
                        Integer width,
                        Integer height) {
         this.storageKey = storageKey;
         this.originalFilename = originalFilename;
+        this.status = status;
         this.contentType = contentType;
         this.sizeBytes = sizeBytes;
         this.width = width;
@@ -57,6 +64,7 @@ public class FileObject extends BaseTimeEntity {
 
     public static FileObject create(String storageKey,
                                     String originalFilename,
+                                    FileObjectStatus status,
                                     String contentType,
                                     Long sizeBytes,
                                     Integer width,
@@ -64,10 +72,15 @@ public class FileObject extends BaseTimeEntity {
         return FileObject.builder()
                 .storageKey(storageKey)
                 .originalFilename(originalFilename)
+                .status(status)
                 .contentType(contentType)
                 .sizeBytes(sizeBytes)
                 .width(width)
                 .height(height)
                 .build();
     }
+
+    public void markUploaded() { this.status = FileObjectStatus.UPLOADED; }
+    public void markReady() { this.status = FileObjectStatus.READY; }
+    public void markFailed() { this.status = FileObjectStatus.FAILED; }
 }

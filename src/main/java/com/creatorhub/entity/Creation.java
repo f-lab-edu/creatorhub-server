@@ -28,7 +28,7 @@ public class Creation extends BaseEntity {
     private Creator creator;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "creation_format_id")
+    @JoinColumn(name = "creation_format_id", nullable = false)
     private CreationFormat creationFormat;
 
     @ManyToOne(fetch = FetchType.LAZY)
