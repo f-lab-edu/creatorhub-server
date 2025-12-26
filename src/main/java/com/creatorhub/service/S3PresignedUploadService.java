@@ -1,5 +1,6 @@
 package com.creatorhub.service;
 
+import com.creatorhub.constant.CreationThumbnailType;
 import com.creatorhub.dto.S3PresignedUrlResponse;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -17,15 +18,23 @@ public class S3PresignedUploadService {
 
     private static final String BUCKET_NAME = "creatorhub-dev-bucket";
 
+    private static final String POSTER_SUFFIX = "_480x623.jpg";
+    private static final String LANDSCAPE_SUFFIX = "_434x330.jpg"; // 트리거 suffix랑 동일해야 함
+
     private final S3Presigner presigner;
 
     public S3PresignedUploadService(S3Presigner presigner) {
         this.presigner = presigner;
     }
 
-    public S3PresignedUrlResponse generatePresignedPutUrl(String contentType) {
+    public S3PresignedUrlResponse generatePresignedPutUrl(String contentType, CreationThumbnailType type) {
 
-        String key = createObjectKey(contentType);
+        // 가로/포스터 contentType은 jpeg로 고정
+        if (!"image/jpeg".equals(contentType)) {
+            throw new IllegalArgumentException("image/jpeg 타입만 허용 가능합니다.");
+        }
+
+        String key = createObjectKey(type);
 
         PutObjectRequest objectRequest = PutObjectRequest.builder()
                 .bucket(BUCKET_NAME)
@@ -48,19 +57,14 @@ public class S3PresignedUploadService {
         );
     }
 
-    private String createObjectKey(String contentType) {
-        String ext = contentTypeToExtension(contentType);
+    private String createObjectKey(CreationThumbnailType type) {
         String datePath = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+        String base = "upload/" + datePath + "/" + UUID.randomUUID();
 
-        return "upload/" + datePath + "/" + UUID.randomUUID() + ext;
-    }
-
-    private String contentTypeToExtension(String contentType) {
-        return switch (contentType) {
-            case "image/jpeg" -> ".jpg";
-            case "image/png" -> ".png";
-            case "image/webp" -> ".webp";
-            default -> "";
+        return switch (type) {
+            case REP_POSTER -> base + POSTER_SUFFIX;       // 480x623
+            case REP_HORIZONTAL -> base + LANDSCAPE_SUFFIX; // 434x330 (Lambda 트리거)
+            case EXTRA -> null;
         };
     }
 }

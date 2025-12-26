@@ -1,5 +1,6 @@
 package com.creatorhub.controller;
 
+import com.creatorhub.constant.CreationThumbnailType;
 import com.creatorhub.dto.S3PresignedUrlResponse;
 import com.creatorhub.service.S3PresignedUploadService;
 import lombok.RequiredArgsConstructor;
@@ -21,9 +22,10 @@ public class S3PresignedUploadController {
      */
     @PostMapping("/presigned-url")
     public S3PresignedUrlResponse createPresignedUrl(
-            @RequestParam String contentType
+            @RequestParam String contentType,
+            @RequestParam CreationThumbnailType thumbnailType
     ) {
-        log.info("S3 Presigned PUT URL 생성 요청 - contentType={}", contentType);
-        return uploadService.generatePresignedPutUrl(contentType);
+        log.info("S3 Presigned PUT URL 생성 요청 - contentType={}, thumbnailType={}", contentType, thumbnailType);
+        return uploadService.generatePresignedPutUrl(contentType, thumbnailType);
     }
 }
