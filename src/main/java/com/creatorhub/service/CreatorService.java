@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CreatorServie {
+public class CreatorService {
     private final CreatorRepository creatorRepository;
     private final MemberRepository memberRepository;
 

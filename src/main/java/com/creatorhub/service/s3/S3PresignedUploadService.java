@@ -1,4 +1,4 @@
-package com.creatorhub.service;
+package com.creatorhub.service.s3;
 
 import com.creatorhub.constant.CreationThumbnailType;
 import com.creatorhub.constant.FileObjectStatus;
@@ -50,9 +50,7 @@ public class S3PresignedUploadService {
                 req.originalFilename(),
                 FileObjectStatus.INIT,
                 req.contentType(),
-                0L,
-                null,
-                null
+                0L
         );
         FileObject saved = fileObjectRepository.save(fileObject);
 

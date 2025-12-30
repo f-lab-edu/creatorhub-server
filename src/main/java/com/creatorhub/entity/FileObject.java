@@ -41,46 +41,39 @@ public class FileObject extends BaseTimeEntity {
     @Column(nullable = false)
     private Long sizeBytes;
 
-    private Integer width;
-
-    private Integer height;
-
     @Builder(access = AccessLevel.PRIVATE)
     private FileObject(String storageKey,
                        String originalFilename,
                        FileObjectStatus status,
                        String contentType,
-                       Long sizeBytes,
-                       Integer width,
-                       Integer height) {
+                       Long sizeBytes) {
         this.storageKey = storageKey;
         this.originalFilename = originalFilename;
         this.status = status;
         this.contentType = contentType;
         this.sizeBytes = sizeBytes;
-        this.width = width;
-        this.height = height;
     }
 
     public static FileObject create(String storageKey,
                                     String originalFilename,
                                     FileObjectStatus status,
                                     String contentType,
-                                    Long sizeBytes,
-                                    Integer width,
-                                    Integer height) {
+                                    Long sizeBytes) {
         return FileObject.builder()
                 .storageKey(storageKey)
                 .originalFilename(originalFilename)
                 .status(status)
                 .contentType(contentType)
                 .sizeBytes(sizeBytes)
-                .width(width)
-                .height(height)
                 .build();
     }
 
     public void markUploaded() { this.status = FileObjectStatus.UPLOADED; }
     public void markReady() { this.status = FileObjectStatus.READY; }
     public void markFailed() { this.status = FileObjectStatus.FAILED; }
+
+    // _숫자x숫자.jpg 패턴 제거
+    public String extractBaseKey() {
+        return storageKey.replaceFirst("_\\d+x\\d+\\.jpg$", "");
+    }
 }

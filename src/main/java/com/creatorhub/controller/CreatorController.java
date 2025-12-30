@@ -3,7 +3,7 @@ package com.creatorhub.controller;
 import com.creatorhub.dto.CreatorRequest;
 import com.creatorhub.dto.CreatorResponse;
 import com.creatorhub.security.auth.CustomUserPrincipal;
-import com.creatorhub.service.CreatorServie;
+import com.creatorhub.service.CreatorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class CreatorController {
 
-    private final CreatorServie creatorServie;
+    private final CreatorService creatorService;
 
     // 인가 테스트용(삭제 예정)
     @PreAuthorize("hasRole('ROLE_CREATOR')")
@@ -39,7 +39,7 @@ public class CreatorController {
             @Valid @RequestBody CreatorRequest creatorRequest,
             @AuthenticationPrincipal CustomUserPrincipal principal
     ) {
-        CreatorResponse creatorResponse = creatorServie.signup(principal.id(), creatorRequest);
+        CreatorResponse creatorResponse = creatorService.signup(principal.id(), creatorRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(creatorResponse);
     }
 }

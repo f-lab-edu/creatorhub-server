@@ -1,18 +1,19 @@
 package com.creatorhub.controller;
 
+import com.creatorhub.dto.FileObjectResponse;
 import com.creatorhub.dto.S3PresignedUrlRequest;
 import com.creatorhub.dto.S3PresignedUrlResponse;
 import com.creatorhub.service.FileObjectService;
-import com.creatorhub.service.S3PresignedUploadService;
+import com.creatorhub.service.s3.S3PresignedUploadService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/uploads")
+@RequestMapping("/api/files")
 @RequiredArgsConstructor
 @Slf4j
-public class S3PresignedUploadController {
+public class FileUploadController {
     private final S3PresignedUploadService uploadService;
     private final FileObjectService fileObjectService;
 
@@ -30,8 +31,13 @@ public class S3PresignedUploadController {
     /**
      * fileObject 상태 변경
      */
-    @PostMapping("/{fileObjectId}/complete")
+    @PostMapping("/{fileObjectId}/uploaded")
     public void complete(@PathVariable Long fileObjectId) {
         fileObjectService.markUploaded(fileObjectId);
+    }
+
+    @GetMapping("/{fileObjectId}/status")
+    public FileObjectResponse getStatus(@PathVariable Long fileObjectId) {
+        return fileObjectService.checkAndGetStatus(fileObjectId);
     }
 }
