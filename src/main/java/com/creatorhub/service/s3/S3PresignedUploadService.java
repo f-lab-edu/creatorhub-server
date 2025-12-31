@@ -81,8 +81,8 @@ public class S3PresignedUploadService {
         String base = "upload/" + datePath + "/" + UUID.randomUUID();
 
         return switch (type) {
-            case REP_POSTER -> base + POSTER_SUFFIX;
-            case REP_HORIZONTAL -> base + LANDSCAPE_SUFFIX; // Lambda 트리거
+            case POSTER -> base + POSTER_SUFFIX;
+            case HORIZONTAL -> base + LANDSCAPE_SUFFIX; // Lambda 트리거
             case EXTRA -> base + "_extra.jpg";
         };
     }
