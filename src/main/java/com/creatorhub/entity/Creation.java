@@ -1,5 +1,8 @@
 package com.creatorhub.entity;
 
+import com.creatorhub.constant.CreationFormat;
+import com.creatorhub.constant.CreationGenre;
+import com.creatorhub.constant.PublishDay;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -9,7 +12,9 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "creation")
@@ -27,13 +32,13 @@ public class Creation extends BaseEntity {
     @JoinColumn(name = "creator_id", nullable = false)
     private Creator creator;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "creation_format_id", nullable = false)
-    private CreationFormat creationFormat;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30, columnDefinition = "VARCHAR(30)")
+    private CreationFormat format;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "genre_id", nullable = false)
-    private Genre genre;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30, columnDefinition = "VARCHAR(30)")
+    private CreationGenre genre;
 
     @Column(nullable = false, length = 30)
     private String title;
@@ -44,6 +49,16 @@ public class Creation extends BaseEntity {
     @Column(nullable = false)
     private boolean isPublic;
 
+    // 연재요일은 자주 바뀌지 않으므로 별도의 엔티티가 아닌 @ElementCollection사용
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+            name = "creation_publish_day",
+            joinColumns = @JoinColumn(name = "creation_id")
+    )
+    @Enumerated(EnumType.STRING)
+    @Column(name = "publish_day", nullable = false, length = 30, columnDefinition = "VARCHAR(30)")
+    private Set<PublishDay> publishDays = new HashSet<>();
+
     @OneToMany(mappedBy = "creation", cascade = CascadeType.ALL, orphanRemoval = true)
     private final List<CreationThumbnail> creationThumbnail = new ArrayList<>();
 
@@ -52,13 +67,13 @@ public class Creation extends BaseEntity {
 
     @Builder(access = AccessLevel.PRIVATE)
     private Creation(Creator creator,
-                     CreationFormat creationFormat,
-                     Genre genre,
+                     CreationFormat format,
+                     CreationGenre genre,
                      String title,
                      String plot,
                      boolean isPublic) {
         this.creator = creator;
-        this.creationFormat = creationFormat;
+        this.format = format;
         this.genre = genre;
         this.title = title;
         this.plot = plot;
@@ -66,14 +81,14 @@ public class Creation extends BaseEntity {
     }
 
     public static Creation create(Creator creator,
-                                  CreationFormat creationFormat,
-                                  Genre genre,
+                                  CreationFormat format,
+                                  CreationGenre genre,
                                   String title,
                                   String plot,
                                   Boolean isPublic) {
         return Creation.builder()
                 .creator(creator)
-                .creationFormat(creationFormat)
+                .format(format)
                 .genre(genre)
                 .title(title)
                 .plot(plot)
@@ -84,9 +99,7 @@ public class Creation extends BaseEntity {
     public void publish() {
         this.isPublic = true;
     }
-
     public void unpublish() {
         this.isPublic = false;
     }
-
 }
