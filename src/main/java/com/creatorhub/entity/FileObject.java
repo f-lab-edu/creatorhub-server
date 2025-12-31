@@ -68,9 +68,10 @@ public class FileObject extends BaseTimeEntity {
                 .build();
     }
 
-    public void markUploaded() { this.status = FileObjectStatus.UPLOADED; }
+
     public void markReady() { this.status = FileObjectStatus.READY; }
     public void markFailed() { this.status = FileObjectStatus.FAILED; }
+    public void markSize(long sizeBytes) { this.sizeBytes = sizeBytes; }
 
     // _숫자x숫자.jpg 패턴 제거
     public String extractBaseKey() {

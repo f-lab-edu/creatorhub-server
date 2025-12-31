@@ -3,6 +3,8 @@ package com.creatorhub.dto;
 import com.creatorhub.constant.FileObjectStatus;
 import com.creatorhub.entity.FileObject;
 
+import java.util.List;
+
 public record FileObjectResponse(
         Long id,
         String storageKey,
@@ -20,5 +22,11 @@ public record FileObjectResponse(
                 fileObject.getContentType(),
                 fileObject.getSizeBytes()
         );
+    }
+
+    public static List<FileObjectResponse> listFrom(List<FileObject> fileObjects) {
+        return fileObjects.stream()
+                .map(FileObjectResponse::from)
+                .toList();
     }
 }

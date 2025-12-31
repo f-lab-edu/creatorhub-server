@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
@@ -29,15 +31,18 @@ public class FileUploadController {
     }
 
     /**
-     * fileObject 상태 변경
+     * fileObject 작품등록시 가로 이미지 원본 상태 변경
      */
     @PostMapping("/{fileObjectId}/uploaded")
     public void complete(@PathVariable Long fileObjectId) {
-        fileObjectService.markUploaded(fileObjectId);
+        fileObjectService.markReady(fileObjectId);
     }
 
+    /**
+     * fileObject 작품등록시 가로 리사이징 이미지 업로드 상태 확인(폴링용)
+     */
     @GetMapping("/{fileObjectId}/status")
-    public FileObjectResponse getStatus(@PathVariable Long fileObjectId) {
+    public List<FileObjectResponse> getStatus(@PathVariable Long fileObjectId) {
         return fileObjectService.checkAndGetStatus(fileObjectId);
     }
 }
