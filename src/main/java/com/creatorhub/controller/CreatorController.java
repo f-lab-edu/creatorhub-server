@@ -36,10 +36,10 @@ public class CreatorController {
     @PreAuthorize("hasRole('ROLE_MEMBER')")
     @PostMapping("/signup")
     public ResponseEntity<CreatorResponse> signup(
-            @Valid @RequestBody CreatorRequest creatorRequest,
+            @Valid @RequestBody CreatorRequest req,
             @AuthenticationPrincipal CustomUserPrincipal principal
     ) {
-        CreatorResponse creatorResponse = creatorService.signup(principal.id(), creatorRequest);
+        CreatorResponse creatorResponse = creatorService.signup(principal.id(), req);
         return ResponseEntity.status(HttpStatus.CREATED).body(creatorResponse);
     }
 }

@@ -2,10 +2,7 @@ package com.creatorhub.entity;
 
 import com.creatorhub.constant.FileObjectStatus;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -17,6 +14,7 @@ import org.hibernate.annotations.SQLRestriction;
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ToString()
 @SQLDelete(sql = "UPDATE file_object SET deleted_at = NOW() WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
 public class FileObject extends BaseTimeEntity {

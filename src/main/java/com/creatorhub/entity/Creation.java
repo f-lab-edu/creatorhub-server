@@ -60,7 +60,7 @@ public class Creation extends BaseEntity {
     private Set<PublishDay> publishDays = new HashSet<>();
 
     @OneToMany(mappedBy = "creation", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final List<CreationThumbnail> creationThumbnail = new ArrayList<>();
+    private final List<CreationThumbnail> creationThumbnails = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
     private Creation(Creator creator,
@@ -96,7 +96,15 @@ public class Creation extends BaseEntity {
     public void publish() {
         this.isPublic = true;
     }
-    public void unpublish() {
-        this.isPublic = false;
+    public void unpublish() { this.isPublic = false; }
+
+    public void addThumbnail(CreationThumbnail thumbnail) {
+        this.creationThumbnails.add(thumbnail);
+        thumbnail.changeCreation(this);
+    }
+
+    public void setPublishDays(Set<PublishDay> days) {
+        this.publishDays.clear();
+        if (days != null) this.publishDays.addAll(days);
     }
 }

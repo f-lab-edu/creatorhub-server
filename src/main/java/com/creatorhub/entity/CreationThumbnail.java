@@ -29,6 +29,7 @@ public class CreationThumbnail extends BaseTimeEntity {
     @JoinColumn(name = "creation_id", nullable = false)
     private Creation creation;
 
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "file_object_id", nullable = false)
     private FileObject fileObject;
@@ -70,5 +71,9 @@ public class CreationThumbnail extends BaseTimeEntity {
                 .displayOrder(displayOrder)
                 .sourceImage(sourceImage)
                 .build();
+    }
+
+    public void changeCreation(Creation creation) {
+        this.creation = creation;
     }
 }

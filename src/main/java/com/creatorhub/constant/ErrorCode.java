@@ -12,6 +12,7 @@ public enum ErrorCode {
 
     // Creator 관련 에러
     ALREADY_CREATOR(HttpStatus.CONFLICT, "C001", "이미 존재하는 작가입니다."),
+    CREATOR_NOT_FOUND(HttpStatus.NOT_FOUND, "C002", "존재하는 않는 작가입니다."),
 
     // Authorization 관련 에러
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "A001", "접근이 제한되었습니다."),
