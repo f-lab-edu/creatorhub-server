@@ -62,6 +62,9 @@ public class Creation extends BaseEntity {
     @OneToMany(mappedBy = "creation", cascade = CascadeType.ALL, orphanRemoval = true)
     private final List<CreationThumbnail> creationThumbnails = new ArrayList<>();
 
+    @OneToMany(mappedBy = "creation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private final List<CreationHashtag> creationHashtags = new ArrayList<>();
+
     @Builder(access = AccessLevel.PRIVATE)
     private Creation(Creator creator,
                      CreationFormat format,
@@ -106,5 +109,9 @@ public class Creation extends BaseEntity {
     public void setPublishDays(Set<PublishDay> days) {
         this.publishDays.clear();
         if (days != null) this.publishDays.addAll(days);
+    }
+
+    public void addHashtag(Hashtag hashtag) {
+        this.creationHashtags.add(CreationHashtag.link(this, hashtag));
     }
 }

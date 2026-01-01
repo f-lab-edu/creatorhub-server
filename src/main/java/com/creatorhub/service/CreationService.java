@@ -4,25 +4,21 @@ import com.creatorhub.constant.CreationThumbnailType;
 import com.creatorhub.constant.FileObjectStatus;
 import com.creatorhub.constant.ThumbnailKeys;
 import com.creatorhub.dto.CreationRequest;
-import com.creatorhub.entity.Creation;
-import com.creatorhub.entity.CreationThumbnail;
-import com.creatorhub.entity.Creator;
-import com.creatorhub.entity.FileObject;
+import com.creatorhub.entity.*;
 import com.creatorhub.exception.CreatorNotFoundException;
 import com.creatorhub.exception.FileObjectNotFoundException;
 import com.creatorhub.exception.FileObjectStatusException;
 import com.creatorhub.repository.CreationRepository;
 import com.creatorhub.repository.CreatorRepository;
 import com.creatorhub.repository.FileObjectRepository;
+import com.creatorhub.repository.HashtagRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +27,7 @@ public class CreationService {
     private final CreationRepository creationRepository;
     private final FileObjectRepository fileObjectRepository;
     private final CreatorRepository creatorRepository;
+    private final HashtagRepository hashtagRepository;
 
     @Transactional
     public Long createCreation(CreationRequest req) {
@@ -107,6 +104,20 @@ public class CreationService {
             creation.addThumbnail(derivedThumb);
             order++;
         }
+
+        // 7. 해시태그: 자동완성으로 선택된 id들만 저장
+        List<Hashtag> hashtags = hashtagRepository.findByIdIn(req.hashtagIds());
+
+        // 누락된 해시태그 id 찾기
+        if (hashtags.size() != req.hashtagIds().size()) {
+            Set<Long> found = hashtags.stream().map(Hashtag::getId).collect(Collectors.toSet());
+            Set<Long> missingHashtagIds = new HashSet<>(req.hashtagIds());
+
+            missingHashtagIds.removeAll(found);
+            throw new IllegalArgumentException("존재하지 않는 hashtagId가 포함되어 있습니다: " + missingHashtagIds);
+        }
+
+        for (Hashtag h : hashtags) { creation.addHashtag(h); }
 
         // 7. 저장 (cascade로 thumbnail도 저장됨)
         Creation saved = creationRepository.save(creation);

@@ -6,9 +6,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Table(
         name = "hashtag",
@@ -24,9 +21,6 @@ public class Hashtag {
 
     @Column(nullable = false, length = 30)
     private String title;
-
-    @OneToMany(mappedBy = "hashtag", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final List<CreationHashtag> creationHashtags = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
     private Hashtag(String title) {
