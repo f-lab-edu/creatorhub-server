@@ -4,6 +4,7 @@ import com.creatorhub.constant.FileObjectStatus;
 import com.creatorhub.dto.DerivativesCheckResponse;
 import com.creatorhub.dto.FileObjectResponse;
 import com.creatorhub.entity.FileObject;
+import com.creatorhub.exception.FileObjectNotFoundException;
 import com.creatorhub.repository.FileObjectRepository;
 import com.creatorhub.service.s3.ImageProcessingChecker;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,7 @@ public class FileObjectService {
     @Transactional // 더티체킹
     public void markReady(Long fileObjectId) {
         FileObject fo = fileObjectRepository.findById(fileObjectId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 FileObject를 찾을 수 없습니다."));
+                .orElseThrow(() -> new FileObjectNotFoundException("해당 FileObject를 찾을 수 없습니다: " + fileObjectId));
 
         long originalSize = checker.fetchSize(fo.getStorageKey());
 
@@ -39,7 +40,7 @@ public class FileObjectService {
     @Transactional // 더티체킹
     public List<FileObjectResponse> checkAndGetStatus(Long fileObjectId) {
         FileObject original = fileObjectRepository.findById(fileObjectId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 FileObject를 찾을 수 없습니다."));
+                .orElseThrow(() -> new FileObjectNotFoundException("해당 FileObject를 찾을 수 없습니다: " + fileObjectId));
 
         String baseKey = original.extractBaseKey();
 

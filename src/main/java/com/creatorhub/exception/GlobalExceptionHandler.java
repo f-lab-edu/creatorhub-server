@@ -105,6 +105,24 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * File 관련 예외 처리
+     */
+    @ExceptionHandler(FileObjectException.class)
+    public ResponseEntity<ErrorResponse> handleFileObjectException(
+            CreatorException ex,
+            HttpServletRequest request) {
+
+        log.warn("FileObjectException occurred - Message: {}", ex.getMessage());
+
+        ErrorResponse errorResponse =
+                ErrorResponse.of(ex.getErrorCode(), request.getRequestURI());
+
+        return ResponseEntity
+                .status(ex.getErrorCode().getHttpStatus())
+                .body(errorResponse);
+    }
+
+    /**
      * 예상하지 못한 모든 예외 처리
      */
     @ExceptionHandler(Exception.class)

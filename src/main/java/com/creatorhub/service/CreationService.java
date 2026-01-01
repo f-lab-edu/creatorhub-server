@@ -9,6 +9,8 @@ import com.creatorhub.entity.CreationThumbnail;
 import com.creatorhub.entity.Creator;
 import com.creatorhub.entity.FileObject;
 import com.creatorhub.exception.CreatorNotFoundException;
+import com.creatorhub.exception.FileObjectNotFoundException;
+import com.creatorhub.exception.FileObjectStatusException;
 import com.creatorhub.repository.CreationRepository;
 import com.creatorhub.repository.CreatorRepository;
 import com.creatorhub.repository.FileObjectRepository;
@@ -50,13 +52,13 @@ public class CreationService {
 
         // 3. 원본 fileObject 조회 + baseKey 추출
         FileObject original = fileObjectRepository.findById(req.horizontalOriginalFileObjectId())
-                .orElseThrow(() -> new IllegalArgumentException("FileObject를 찾을 수 없습니다: " + req.horizontalOriginalFileObjectId()));
+                .orElseThrow(() -> new FileObjectNotFoundException("해당 FileObject를 찾을 수 없습니다:" + req.horizontalOriginalFileObjectId()));
 
         log.info("original 데이터 조회 결과- horizontalOriginalFileObjectId: {}, original: {}", req.horizontalOriginalFileObjectId(), original);
 
         // (선택) 상태 검증: READY 아니면 등록 막기
         if (original.getStatus() != FileObjectStatus.READY) {
-            throw new IllegalStateException("원본 파일이 READY 상태가 아닙니다. status=" + original.getStatus());
+            throw new FileObjectStatusException("원본 파일이 READY 상태가 아닙니다. status: " + original.getStatus());
         }
 
         String baseKey = original.extractBaseKey();
@@ -76,7 +78,7 @@ public class CreationService {
             if (!byKey.containsKey(k)) missing.add(k);
         }
         if (!missing.isEmpty()) {
-            throw new IllegalStateException("썸네일 파일이 누락되었습니다.: " + missing);
+            throw new FileObjectNotFoundException("썸네일 파일이 누락되었습니다.: " + missing);
         }
 
         // 6. CreationThumbnail 생성

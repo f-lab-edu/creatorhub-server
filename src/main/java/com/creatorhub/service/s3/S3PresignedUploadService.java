@@ -81,7 +81,8 @@ public class S3PresignedUploadService {
         return switch (type) {
             case POSTER -> base + ThumbnailKeys.POSTER_SUFFIX;
             case HORIZONTAL -> base + ThumbnailKeys.HORIZONTAL_SUFFIX; // Lambda 트리거
-            case DERIVED -> base + "_extra.jpg";
+            case DERIVED -> null;
+            case EXTRA -> null;
         };
     }
 }
