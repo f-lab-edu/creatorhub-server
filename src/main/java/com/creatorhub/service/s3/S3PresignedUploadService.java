@@ -2,6 +2,7 @@ package com.creatorhub.service.s3;
 
 import com.creatorhub.constant.CreationThumbnailType;
 import com.creatorhub.constant.FileObjectStatus;
+import com.creatorhub.constant.ThumbnailKeys;
 import com.creatorhub.dto.S3PresignedUrlRequest;
 import com.creatorhub.dto.S3PresignedUrlResponse;
 import com.creatorhub.entity.FileObject;
@@ -21,9 +22,6 @@ import java.util.UUID;
 public class S3PresignedUploadService {
 
     private static final String BUCKET_NAME = "creatorhub-dev-bucket";
-
-    private static final String POSTER_SUFFIX = "_480x623.jpg";
-    private static final String LANDSCAPE_SUFFIX = "_434x330.jpg"; // Lambda 트리거 suffix
 
     private final S3Presigner presigner;
     private final FileObjectRepository fileObjectRepository;
@@ -81,9 +79,9 @@ public class S3PresignedUploadService {
         String base = "upload/" + datePath + "/" + UUID.randomUUID();
 
         return switch (type) {
-            case POSTER -> base + POSTER_SUFFIX;
-            case HORIZONTAL -> base + LANDSCAPE_SUFFIX; // Lambda 트리거
-            case EXTRA -> base + "_extra.jpg";
+            case POSTER -> base + ThumbnailKeys.POSTER_SUFFIX;
+            case HORIZONTAL -> base + ThumbnailKeys.HORIZONTAL_SUFFIX; // Lambda 트리거
+            case DERIVED -> base + "_extra.jpg";
         };
     }
 }

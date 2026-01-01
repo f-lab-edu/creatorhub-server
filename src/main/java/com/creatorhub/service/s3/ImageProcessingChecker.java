@@ -1,5 +1,6 @@
 package com.creatorhub.service.s3;
 
+import com.creatorhub.constant.ThumbnailKeys;
 import com.creatorhub.dto.DerivativesCheckResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -18,14 +19,6 @@ public class ImageProcessingChecker {
     private final S3Client s3Client;
     private final String bucket;
 
-    private static final List<String> DERIVED_SUFFIXES = List.of(
-            "_83x90.jpg",
-            "_98x79.jpg",
-            "_125x101.jpg",
-            "_202x164.jpg",
-            "_217x165.jpg",
-            "_218x120.jpg"
-    );
 
     public ImageProcessingChecker(S3Client s3Client,
                                   @Value("${cloud.aws.s3.bucket}") String bucket) {
@@ -40,7 +33,7 @@ public class ImageProcessingChecker {
         Map<String, Long> sizeByKey = new HashMap<>(); // S3에 업로드된 이미지 key
         List<String> missingKeys = new ArrayList<>(); // S3에 업로드 실패한 이미지 key
 
-        for (String suffix : DERIVED_SUFFIXES) {
+        for (String suffix : ThumbnailKeys.DERIVED_SUFFIXES) {
             String key = baseKey + suffix;
 
             try {

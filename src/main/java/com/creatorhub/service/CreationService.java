@@ -83,7 +83,7 @@ public class CreationService {
         // 원본(가로) - displayOrder = 0
         CreationThumbnail originalThumb = CreationThumbnail.create(
                 creation,
-                byKey.get(baseKey + ThumbnailKeys.ORIGINAL_SUFFIX),
+                byKey.get(baseKey + ThumbnailKeys.HORIZONTAL_SUFFIX),
                 CreationThumbnailType.HORIZONTAL,
                 (short) 0,
                 null
@@ -98,7 +98,7 @@ public class CreationService {
             CreationThumbnail derivedThumb = CreationThumbnail.create(
                     creation,
                     derivedFo,
-                    CreationThumbnailType.EXTRA,
+                    CreationThumbnailType.DERIVED,
                     order,
                     originalThumb
             );
