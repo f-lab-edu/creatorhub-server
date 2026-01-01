@@ -11,9 +11,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -58,12 +56,6 @@ public class Creation extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "publish_day", nullable = false, length = 30, columnDefinition = "VARCHAR(30)")
     private Set<PublishDay> publishDays = new HashSet<>();
-
-    @OneToMany(mappedBy = "creation", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final List<CreationThumbnail> creationThumbnail = new ArrayList<>();
-
-    @OneToMany(mappedBy = "creation", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final List<CreationHashtag> creationHashtags = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
     private Creation(Creator creator,
