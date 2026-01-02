@@ -1,8 +1,10 @@
 package com.creatorhub.controller;
 
 import com.creatorhub.dto.FileObjectResponse;
-import com.creatorhub.dto.S3PresignedUrlRequest;
-import com.creatorhub.dto.S3PresignedUrlResponse;
+import com.creatorhub.dto.s3.CreationThumbnailPresignedRequest;
+import com.creatorhub.dto.s3.EpisodeThumbnailPresignedRequest;
+import com.creatorhub.dto.s3.ManuscriptPresignedRequest;
+import com.creatorhub.dto.s3.S3PresignedUrlResponse;
 import com.creatorhub.service.FileObjectService;
 import com.creatorhub.service.s3.S3PresignedUploadService;
 import lombok.RequiredArgsConstructor;
@@ -20,12 +22,34 @@ public class FileUploadController {
     private final FileObjectService fileObjectService;
 
     /**
-     * presigned url 요청
+     * 작품 썸네일 presigned url 요청
      */
-    @PostMapping("/presigned-url")
-    public S3PresignedUrlResponse createPresignedUrl(@RequestBody S3PresignedUrlRequest req) {
-        log.info("Presigned PUT 요청 - contentType={}, thumbnailType={}, originalFilename={}",
+    @PostMapping("/creation-thumbnails/presigned")
+    public S3PresignedUrlResponse createPresignedUrl(@RequestBody CreationThumbnailPresignedRequest req) {
+        log.info("작품 썸네일 Presigned PUT 요청 - contentType={}, thumbnailType={}, originalFilename={}",
                 req.contentType(), req.thumbnailType(), req.originalFilename());
+
+        return uploadService.generatePresignedPutUrl(req);
+    }
+
+    /**
+     * 회차 썸네일 presigned url 요청
+     */
+    @PostMapping("/episode-thumbnails/presigned")
+    public S3PresignedUrlResponse createPresignedUrl(@RequestBody EpisodeThumbnailPresignedRequest req) {
+        log.info("회차 썸네일 Presigned PUT 요청 - contentType={}, thumbnailType={}, originalFilename={}",
+                req.contentType(), req.thumbnailType(), req.originalFilename());
+
+        return uploadService.generatePresignedPutUrl(req);
+    }
+
+    /**
+     * 원고 presigned url 요청
+     */
+    @PostMapping("/manuscripts/presigned")
+    public S3PresignedUrlResponse createPresignedUrl(@RequestBody ManuscriptPresignedRequest req) {
+        log.info("원고 Presigned PUT 요청 - contentType={}, originalFilename={}",
+                req.contentType(), req.originalFilename());
 
         return uploadService.generatePresignedPutUrl(req);
     }
