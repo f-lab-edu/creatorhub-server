@@ -47,20 +47,20 @@ public class CreationService {
         );
         creation.setPublishDays(req.publishDays());
 
-        // 3. 원본 fileObject 조회 + baseKey 추출
-        FileObject original = fileObjectRepository.findById(req.horizontalOriginalFileObjectId())
-                .orElseThrow(() -> new FileObjectNotFoundException("해당 FileObject를 찾을 수 없습니다:" + req.horizontalOriginalFileObjectId()));
+        // 3. 가로형 fileObject 조회 + baseKey 추출
+        FileObject horizontalOriginal = fileObjectRepository.findById(req.horizontalOriginalFileObjectId())
+                .orElseThrow(() -> new FileObjectNotFoundException("가로형 FileObject를 찾을 수 없습니다:" + req.horizontalOriginalFileObjectId()));
 
-        log.info("original 데이터 조회 결과- horizontalOriginalFileObjectId: {}, original: {}", req.horizontalOriginalFileObjectId(), original);
+        log.info("horizontalOriginal 데이터 조회 결과- horizontalOriginalFileObjectId: {}, horizontalOriginal: {}", req.horizontalOriginalFileObjectId(), horizontalOriginal);
 
         // (선택) 상태 검증: READY 아니면 등록 막기
-        if (original.getStatus() != FileObjectStatus.READY) {
-            throw new FileObjectStatusException("원본 파일이 READY 상태가 아닙니다. status: " + original.getStatus());
+        if (horizontalOriginal.getStatus() != FileObjectStatus.READY) {
+            throw new FileObjectStatusException("가로형 썸네일이 READY 상태가 아닙니다. status: " + horizontalOriginal.getStatus());
         }
 
-        String baseKey = original.extractBaseKey();
+        String baseKey = horizontalOriginal.extractBaseKey();
 
-        // 4. 7개 key 만들어서 FileObject에서 해당 데이터들 조회
+        // 4. 7개 key(가로형 1개 + 리사이징 6개) 만들어서 FileObject에서 해당 데이터들 조회
         List<String> keys = ThumbnailKeys.allSuffixes().stream()
                 .map(suffix -> baseKey + suffix)
                 .toList();
@@ -78,18 +78,33 @@ public class CreationService {
             throw new FileObjectNotFoundException("썸네일 파일이 누락되었습니다.: " + missing);
         }
 
-        // 6. CreationThumbnail 생성
-        // 원본(가로) - displayOrder = 0
-        CreationThumbnail originalThumb = CreationThumbnail.create(
+        // 6. 포스터형 fileObject 조회
+        FileObject posterOriginal = fileObjectRepository.findById(req.posterOriginalFileObjectId())
+                .orElseThrow(() -> new FileObjectNotFoundException("포스터형 FileObject를 찾을 수 없습니다:" + req.posterOriginalFileObjectId()));
+
+        // 7. CreationThumbnail 생성
+        // 포스터형, 가로형 썸네일은 대표 이미지 이므로 displayOrder = 0
+        // 포스터형 썸네일 - displayOrder = 0
+        CreationThumbnail posterOriginalThumb = CreationThumbnail.create(
+                creation,
+                posterOriginal,
+                CreationThumbnailType.POSTER,
+                (short) 0,
+                null
+        );
+        creation.addThumbnail(posterOriginalThumb);
+
+        // 가로형 썸네일 - displayOrder = 0
+        CreationThumbnail horizontalOriginalThumb = CreationThumbnail.create(
                 creation,
                 byKey.get(baseKey + ThumbnailKeys.HORIZONTAL_SUFFIX),
                 CreationThumbnailType.HORIZONTAL,
                 (short) 0,
                 null
         );
-        creation.addThumbnail(originalThumb);
+        creation.addThumbnail(horizontalOriginalThumb);
 
-        // 리사이징 이미지 6개 - displayOrder = 1..6, sourceImage = originalThumb
+        // 리사이징 이미지 6개 - displayOrder = 1..6, sourceImage = horizontalOriginalThumb
         short order = 1;
         for (String suffix : ThumbnailKeys.DERIVED_SUFFIXES) {
             FileObject derivedFo = byKey.get(baseKey + suffix);
@@ -99,13 +114,13 @@ public class CreationService {
                     derivedFo,
                     CreationThumbnailType.DERIVED,
                     order,
-                    originalThumb
+                    horizontalOriginalThumb
             );
             creation.addThumbnail(derivedThumb);
             order++;
         }
 
-        // 7. 해시태그: 자동완성으로 선택된 id들만 저장
+        // 8. 해시태그 조회: 자동완성으로 선택된 id들만 저장
         List<Hashtag> hashtags = hashtagRepository.findByIdIn(req.hashtagIds());
 
         // 누락된 해시태그 id 찾기
@@ -119,7 +134,7 @@ public class CreationService {
 
         for (Hashtag h : hashtags) { creation.addHashtag(h); }
 
-        // 7. 저장 (cascade로 thumbnail도 저장됨)
+        // 9. 최종 저장
         Creation saved = creationRepository.save(creation);
         return saved.getId();
     }

@@ -31,7 +31,7 @@ public class FileUploadController {
     }
 
     /**
-     * fileObject 작품등록시 가로 이미지 원본 상태 변경
+     * fileObject 작품등록시 이미지 상태 변경(INIT -> READY)
      */
     @PostMapping("/{fileObjectId}/uploaded")
     public void complete(@PathVariable Long fileObjectId) {
@@ -39,7 +39,7 @@ public class FileUploadController {
     }
 
     /**
-     * fileObject 작품등록시 가로 리사이징 이미지 업로드 상태 확인(폴링용)
+     * fileObject 작품등록시 가로 리사이징 이미지 업로드 상태 확인(폴링용) & file_object insert
      */
     @GetMapping("/{fileObjectId}/status")
     public List<FileObjectResponse> getStatus(@PathVariable Long fileObjectId) {

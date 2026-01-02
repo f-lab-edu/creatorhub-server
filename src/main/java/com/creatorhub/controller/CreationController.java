@@ -23,6 +23,11 @@ public class CreationController {
      */
     @PostMapping("create")
     public ResponseEntity<Map<String, Object>> createCreation(@Valid @RequestBody CreationRequest req) {
+        log.info("작품등록 요청 - creatorId={}, title={}, isPublic={}",
+                req.creatorId(),
+                req.title(),
+                req.isPublic()
+        );
         Long id = creationService.createCreation(req);
         return ResponseEntity.ok(Map.of("creationId", id));
     }
