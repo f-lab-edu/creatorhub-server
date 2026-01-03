@@ -1,8 +1,8 @@
 package com.creatorhub.service.s3;
 
 import com.creatorhub.constant.FileObjectStatus;
-import com.creatorhub.dto.s3.PresignedPutRequest;
-import com.creatorhub.dto.s3.S3PresignedUrlResponse;
+import com.creatorhub.constant.ThumbnailKeys;
+import com.creatorhub.dto.s3.*;
 import com.creatorhub.entity.FileObject;
 import com.creatorhub.repository.FileObjectRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,7 +15,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class S3PresignedUploadService {
@@ -32,26 +32,100 @@ public class S3PresignedUploadService {
         this.bucket = bucket;
     }
 
-    public S3PresignedUrlResponse generatePresignedPutUrl(PresignedPutRequest req) {
+    public ThumbnailPresignedUrlResponse generatePresignedPutUrl(PresignedPutRequest req) {
 
-        // 1. 검증 (지금은 jpeg 고정 정책)
+        // 1. contentType 검증 (지금은 jpeg 고정 정책)
         validateContentType(req.contentType());
 
         // 2. storageKey 생성
-        String storageKey = createObjectKey(req.resolveSuffix());
+        String storageKey = createThumbnailObjectKey(req.resolveSuffix());
 
-        // 3. FileObject 생성
-        FileObject saved = saveFileObject(storageKey, req);
+        // 3. FileObject 저장
+        FileObject fo = FileObject.create(
+                storageKey,
+                req.originalFilename(),
+                FileObjectStatus.INIT,
+                req.contentType(),
+                0L
+        );
+        fileObjectRepository.save(fo);
 
         // 4. presigned 발급
         PresignedPutObjectRequest presigned = presignPut(storageKey, req.contentType());
 
         // 5. 응답에 fileObjectId 포함
-        return new S3PresignedUrlResponse(
-                saved.getId(),
+        return new ThumbnailPresignedUrlResponse(
+                fo.getId(),
                 presigned.url().toString(),
                 storageKey
         );
+    }
+
+
+    public ManuscriptPresignedResponse generateManuscriptPresignedUrls(ManuscriptPresignedRequest req) {
+
+        int count = req.files().size();
+
+        // 1. contentType 검증 + displayOrder 중복 확인
+        Set<Integer> seenOrders = new HashSet<>();
+        for (ManuscriptFileRequest f : req.files()) {
+            validateContentType(f.contentType());
+
+            if (!seenOrders.add(f.displayOrder())) {
+                throw new IllegalArgumentException("중복된 displayOrder가 있습니다: " + f.displayOrder());
+            }
+        }
+
+        // 2. displayOrder로 원고 오름차순 정렬 (같은 순서 보장)
+        List<ManuscriptFileRequest> sorted = new ArrayList<>(req.files());
+        sorted.sort(Comparator.comparingInt(ManuscriptFileRequest::displayOrder));
+
+
+        // 3. storageKey + FileObject 생성 (N개)
+        List<FileObject> toSave = new ArrayList<>(count);
+        List<Integer> displayOrders = new ArrayList<>(count);
+        List<String> storageKeys = new ArrayList<>(count);
+        List<String> contentTypes = new ArrayList<>(count);
+
+        for (ManuscriptFileRequest fileReq : sorted) {
+            int order = fileReq.displayOrder();
+            String storageKey = createManuscriptObjectKey(req.creationId(), order);
+
+            FileObject fo = FileObject.create(
+                    storageKey,
+                    fileReq.originalFilename(),
+                    FileObjectStatus.INIT,
+                    fileReq.contentType(),
+                    0L
+            );
+
+            toSave.add(fo);
+            displayOrders.add(order);
+            storageKeys.add(storageKey);
+            contentTypes.add(fileReq.contentType());
+        }
+
+        // 4. 저장
+        List<FileObject> savedList = fileObjectRepository.saveAll(toSave);
+
+        // 5. presigned url 발급
+        List<ManuscriptPresignedUrlResponse> items = new ArrayList<>(count);
+
+        for (int i = 0; i < savedList.size(); i++) {
+            String key = storageKeys.get(i);
+            String contentType = contentTypes.get(i);
+
+            PresignedPutObjectRequest presigned = presignPut(key, contentType);
+
+            items.add(new ManuscriptPresignedUrlResponse(
+                    displayOrders.get(i),
+                    savedList.get(i).getId(),
+                    presigned.url().toString(),
+                    key
+            ));
+        }
+
+        return new ManuscriptPresignedResponse(items);
     }
 
     private void validateContentType(String contentType) {
@@ -60,7 +134,7 @@ public class S3PresignedUploadService {
         }
     }
 
-    private String createObjectKey(String suffix) {
+    private String createThumbnailObjectKey(String suffix) {
         if (suffix == null || suffix.isBlank()) {
             throw new IllegalArgumentException("suffix가 비어있습니다.");
         }
@@ -69,16 +143,17 @@ public class S3PresignedUploadService {
         return base + suffix;
     }
 
-    private FileObject saveFileObject(String storageKey, PresignedPutRequest req) {
-        FileObject fileObject = FileObject.create(
-                storageKey,
-                req.originalFilename(),
-                FileObjectStatus.INIT,
-                req.contentType(),
-                0L
-        );
-        return fileObjectRepository.save(fileObject);
+    private String createManuscriptObjectKey(Long creationId, int order) {
+        String datePath = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+
+        String base = "upload/" + datePath
+                + "/" + creationId + "/"
+                + String.format("%03d", order)
+                + "_" + UUID.randomUUID();
+
+        return base + ThumbnailKeys.MANUSCRIPT_SUFFIX;
     }
+
 
     private PresignedPutObjectRequest presignPut(String key, String contentType) {
         PutObjectRequest objectRequest = PutObjectRequest.builder()
@@ -88,7 +163,7 @@ public class S3PresignedUploadService {
                 .build();
 
         PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(2))
+                .signatureDuration(Duration.ofMinutes(10))
                 .putObjectRequest(objectRequest)
                 .build();
 

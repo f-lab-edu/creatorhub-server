@@ -1,17 +1,17 @@
 package com.creatorhub.controller;
 
 import com.creatorhub.dto.FileObjectResponse;
-import com.creatorhub.dto.s3.CreationThumbnailPresignedRequest;
-import com.creatorhub.dto.s3.EpisodeThumbnailPresignedRequest;
-import com.creatorhub.dto.s3.ManuscriptPresignedRequest;
-import com.creatorhub.dto.s3.S3PresignedUrlResponse;
+import com.creatorhub.dto.s3.*;
 import com.creatorhub.service.FileObjectService;
 import com.creatorhub.service.s3.S3PresignedUploadService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/files")
@@ -25,7 +25,7 @@ public class FileUploadController {
      * 작품 썸네일 presigned url 요청
      */
     @PostMapping("/creation-thumbnails/presigned")
-    public S3PresignedUrlResponse createPresignedUrl(@RequestBody CreationThumbnailPresignedRequest req) {
+    public ThumbnailPresignedUrlResponse createCreationThumbnailPresignedUrl(@RequestBody CreationThumbnailPresignedRequest req) {
         log.info("작품 썸네일 Presigned PUT 요청 - contentType={}, thumbnailType={}, originalFilename={}",
                 req.contentType(), req.thumbnailType(), req.originalFilename());
 
@@ -36,7 +36,7 @@ public class FileUploadController {
      * 회차 썸네일 presigned url 요청
      */
     @PostMapping("/episode-thumbnails/presigned")
-    public S3PresignedUrlResponse createPresignedUrl(@RequestBody EpisodeThumbnailPresignedRequest req) {
+    public ThumbnailPresignedUrlResponse createEpisodeThumbnailPresignedUrl(@RequestBody EpisodeThumbnailPresignedRequest req) {
         log.info("회차 썸네일 Presigned PUT 요청 - contentType={}, thumbnailType={}, originalFilename={}",
                 req.contentType(), req.thumbnailType(), req.originalFilename());
 
@@ -47,20 +47,38 @@ public class FileUploadController {
      * 원고 presigned url 요청
      */
     @PostMapping("/manuscripts/presigned")
-    public S3PresignedUrlResponse createPresignedUrl(@RequestBody ManuscriptPresignedRequest req) {
-        log.info("원고 Presigned PUT 요청 - contentType={}, originalFilename={}",
-                req.contentType(), req.originalFilename());
+    public ManuscriptPresignedResponse createManuscriptPresignedUrls(
+            @Valid @RequestBody ManuscriptPresignedRequest req
+    ) {
+        // contentType 요약
+        Map<String, Long> contentTypeSummary = req.files().stream()
+                .collect(Collectors.groupingBy(
+                        ManuscriptFileRequest::contentType,
+                        Collectors.counting()
+                ));
 
-        return uploadService.generatePresignedPutUrl(req);
+        log.info("원고 Presigned PUT 요청 - creationId={}, count={}, contentTypes={}",
+                req.creationId(), req.files().size(), contentTypeSummary);
+
+        return uploadService.generateManuscriptPresignedUrls(req);
     }
 
     /**
-     * fileObject 작품등록시 이미지 상태 변경(INIT -> READY)
+     * fileObject 썸네일 이미지 상태 변경(INIT -> READY)
      */
-    @PostMapping("/{fileObjectId}/uploaded")
-    public void complete(@PathVariable Long fileObjectId) {
-        fileObjectService.markReady(fileObjectId);
+    @PostMapping("/{fileObjectId}/thumbnails/ready")
+    public void markThumbnailReady(@PathVariable Long fileObjectId) {
+        fileObjectService.markThumbnailReady(fileObjectId);
     }
+
+    /**
+     * fileObject 원고 이미지 상태 변경(INIT -> READY)
+     */
+    @PostMapping("/manuscripts/ready")
+    public void markManuscriptsReady(@RequestBody @Valid ManuscriptReadyRequest req) {
+        fileObjectService.markManuscriptsReady(req.fileObjectIds());
+    }
+
 
     /**
      * fileObject 작품등록시 가로 리사이징 이미지 업로드 상태 확인(폴링용) & file_object insert

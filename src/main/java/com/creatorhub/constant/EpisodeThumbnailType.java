@@ -1,10 +1,10 @@
 package com.creatorhub.constant;
 
 public enum EpisodeThumbnailType implements ThumbnailType {
-    EPISODE_THUMBNAIL {
+    EPISODE {
         @Override
         public String resolveSuffix() {
-            return ThumbnailKeys.EPISODE_THUMBNAIL_SUFFIX;
+            return ThumbnailKeys.EPISODE_SUFFIX;
         }
     },
     SNS {

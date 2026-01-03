@@ -50,13 +50,13 @@ public class Episode extends BaseEntity {
     private boolean isPublic;
 
     @Column
-    private Integer likeCount = 0;
+    private Integer likeCount;
 
     @Column
-    private Integer favoriteCount = 0;
+    private Integer favoriteCount;
 
     @Column(precision = 3, scale = 2)
-    private BigDecimal rating;
+    private BigDecimal ratingAverage;
 
     @OneToMany(mappedBy = "episode", cascade = CascadeType.ALL, orphanRemoval = true)
     private final List<ManuscriptImage> manuscriptImages = new ArrayList<>();
@@ -79,6 +79,7 @@ public class Episode extends BaseEntity {
         this.isPublic = isPublic;
         this.likeCount = 0;
         this.favoriteCount = 0;
+        this.ratingAverage = new BigDecimal(0);
     }
 
     public static Episode create(Creation creation,

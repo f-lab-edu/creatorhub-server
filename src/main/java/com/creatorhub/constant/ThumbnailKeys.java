@@ -23,10 +23,13 @@ public final class ThumbnailKeys {
     );
 
     // 회차 썸네일
-    public static final String EPISODE_THUMBNAIL_SUFFIX = "_202x120.jpg";
+    public static final String EPISODE_SUFFIX = "_202x120.jpg";
 
     // 회차 SNS 전용 썸네일
     public static final String SNS_SUFFIX = "_600x315.jpg";
+
+    // 원고 전용 썸네일
+    public static final String MANUSCRIPT_SUFFIX = ".jpg";
 
     public static List<String> allSuffixes() {
         List<String> all = new ArrayList<>();
