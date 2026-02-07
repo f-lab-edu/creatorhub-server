@@ -39,7 +39,11 @@ public class JWTCheckFilter extends OncePerRequestFilter {
         return path.equals("/api/auth/login")          // 로그인
                 || path.equals("/api/auth/refresh")    // 토큰 재발급
                 || path.equals("/api/members/signup") // 회원가입
-                || path.equals("/api/files/resize-complete"); // 이미지 리사이즈 완료 콜백
+                || path.equals("/api/files/resize-complete") // 이미지 리사이즈 완료 콜백
+                // 토스pg 테스트용(제거예정)
+                || path.equals("/index.html")
+                || path.equals("/success.html")
+                || path.equals("/fail.html");
     }
 
     @Override

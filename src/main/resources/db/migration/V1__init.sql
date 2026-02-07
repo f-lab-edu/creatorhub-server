@@ -224,6 +224,36 @@ CREATE TABLE episode_rating (
                                 CONSTRAINT uk_episode_rating_member_episode UNIQUE (member_id, episode_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+
+-- 15. payment 테이블
+CREATE TABLE payment (
+                         id BIGINT NOT NULL AUTO_INCREMENT,
+                         member_id BIGINT NOT NULL,
+                         order_id VARCHAR(64) NOT NULL,
+                         pg_provider VARCHAR(30) NOT NULL,
+                         payment_type VARCHAR(30) NOT NULL,
+                         amount INT NOT NULL,
+                         coin_amount BIGINT NOT NULL,
+                         status VARCHAR(30) NOT NULL,
+                         payment_key VARCHAR(100) NULL,
+                         approved_at DATETIME NULL,
+                         created_at DATETIME(6) NOT NULL,
+                         updated_at DATETIME(6) NOT NULL,
+                         deleted_at DATETIME(6),
+                         created_by VARCHAR(100),
+                         updated_by VARCHAR(100),
+
+                         PRIMARY KEY (id),
+                         CONSTRAINT fk_payment_member FOREIGN KEY (member_id) REFERENCES member(id),
+                         CONSTRAINT uk_payment_order_id UNIQUE (order_id),
+                         CONSTRAINT uk_payment_payment_key UNIQUE (payment_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- payment 인덱스
+CREATE INDEX idx_payment_member_id ON payment(member_id);
+CREATE INDEX idx_payment_created_at ON payment(created_at);
+
+
 -- ================================================================
 -- 테이블 생성 순서
 -- ================================================================
@@ -241,3 +271,4 @@ CREATE TABLE episode_rating (
 -- 12. manuscript_image (episode, file_object 참조)
 -- 13. episode_like (member, episode 참조)
 -- 14. episode_rating (member, episode 참조)
+-- 15. payment (member 참조)
