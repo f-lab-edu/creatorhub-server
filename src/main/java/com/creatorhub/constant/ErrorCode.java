@@ -39,6 +39,10 @@ public enum ErrorCode {
     // s3 관련 에러
     PRESIGNED_URL_ISSUE(HttpStatus.BAD_GATEWAY, "P001", "Presigned URL 발급에 실패했습니다."),
 
+    // 결제/충전 관련 에러
+    INVALID_AMOUNT(HttpStatus.BAD_REQUEST, "PM001", "유효하지 않는 코인 사용입니다."),
+    INSUFFICIENT_COIN(HttpStatus.CONFLICT, "PM002", "코인이 부족합니다."),
+
     // 기타 에러
     INVALID_REQUEST(HttpStatus.BAD_REQUEST, "E001", "잘못된 형식입니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "E002", "서버 오류가 발생했습니다."),

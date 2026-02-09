@@ -44,7 +44,7 @@ public class Payment extends BaseSoftDeleteEntity {
     private String paymentType;
 
     @Column(nullable = false)
-    private Integer amount;
+    private Long amount;
 
     @Column(nullable = false)
     private Long coinAmount;
@@ -63,7 +63,7 @@ public class Payment extends BaseSoftDeleteEntity {
                     String orderId,
                     String pgProvider,
                     String paymentType,
-                    Integer amount,
+                    Long amount,
                     Long coinAmount,
                     PaymentStatus status,
                     String paymentKey,
@@ -84,7 +84,7 @@ public class Payment extends BaseSoftDeleteEntity {
             String orderId,
             String pgProvider,
             String paymentType,
-            Integer amount,
+            Long amount,
             Long coinAmount,
             PaymentStatus status,
             String paymentKey,
@@ -97,7 +97,7 @@ public class Payment extends BaseSoftDeleteEntity {
                 .paymentType(paymentType)
                 .amount(amount)
                 .coinAmount(coinAmount)
-                .status(PaymentStatus.PENDING)
+                .status(status)
                 .paymentKey(paymentKey)
                 .approvedAt(approvedAt)
                 .build();

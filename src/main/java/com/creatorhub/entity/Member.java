@@ -4,6 +4,8 @@ import com.creatorhub.constant.Gender;
 import com.creatorhub.constant.Role;
 
 import com.creatorhub.entity.base.BaseSoftDeleteTimeEntity;
+import com.creatorhub.exception.payment.InsufficientCoinException;
+import com.creatorhub.exception.payment.InvalidAmountException;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -46,6 +48,9 @@ public class Member extends BaseSoftDeleteTimeEntity {
     @Column(nullable = false, length = 30, columnDefinition = "VARCHAR(30)")
     private Role role;
 
+    @Column(nullable = false)
+    private Long coinBalance;
+
     @OneToOne(mappedBy = "member", fetch = FetchType.LAZY)
     private Creator creator;
 
@@ -55,13 +60,15 @@ public class Member extends BaseSoftDeleteTimeEntity {
                    String name,
                    LocalDate birthday,
                    Gender gender,
-                   Role role) {
+                   Role role,
+                   Long coinBalance ) {
         this.email = email;
         this.password = password;
         this.name = name;
         this.birthday = birthday;
         this.gender = gender;
         this.role = role;
+        this.coinBalance = coinBalance;
     }
 
     public static Member createMember(String email,
@@ -77,10 +84,33 @@ public class Member extends BaseSoftDeleteTimeEntity {
                 .birthday(birthday)
                 .gender(gender)
                 .role(Role.MEMBER)
+                .coinBalance(0L)
                 .build();
     }
 
     public void changeRole(Role role) {
         this.role = role;
+    }
+
+    public long addCoinAndGetBalance(long amount) {
+        if (amount <= 0) {
+            throw new InvalidAmountException("코인 충전 금액은 0보다 커야 합니다.");
+        }
+
+        this.coinBalance += amount;
+        return this.coinBalance;
+    }
+
+    public long useCoinAndGetBalance(long amount) {
+        if (amount <= 0) {
+            throw new InvalidAmountException("코인 사용 금액은 0보다 커야 합니다.");
+        }
+
+        if (this.coinBalance < amount) {
+            throw new InsufficientCoinException();
+        }
+
+        this.coinBalance -= amount;
+        return this.coinBalance;
     }
 }

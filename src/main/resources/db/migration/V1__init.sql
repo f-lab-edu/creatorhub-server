@@ -11,6 +11,7 @@ CREATE TABLE member (
                         birthday DATE NOT NULL,
                         gender VARCHAR(30) NOT NULL,
                         role VARCHAR(30) NOT NULL,
+                        coin_balance BIGINT NOT NULL,
                         created_at DATETIME(6) NOT NULL,
                         updated_at DATETIME(6) NOT NULL,
                         deleted_at DATETIME(6),
@@ -232,7 +233,7 @@ CREATE TABLE payment (
                          order_id VARCHAR(64) NOT NULL,
                          pg_provider VARCHAR(30) NOT NULL,
                          payment_type VARCHAR(30) NOT NULL,
-                         amount INT NOT NULL,
+                         amount BIGINT NOT NULL,
                          coin_amount BIGINT NOT NULL,
                          status VARCHAR(30) NOT NULL,
                          payment_key VARCHAR(100) NULL,
@@ -254,6 +255,32 @@ CREATE INDEX idx_payment_member_id ON payment(member_id);
 CREATE INDEX idx_payment_created_at ON payment(created_at);
 
 
+-- 16. coin_ledger 테이블
+CREATE TABLE coin_ledger (
+                             id BIGINT NOT NULL AUTO_INCREMENT,
+                             member_id BIGINT NOT NULL,
+                             transaction_type VARCHAR(30) NOT NULL,
+                             coin_amount_delta BIGINT NOT NULL,
+                             coin_balance_after BIGINT NOT NULL,
+                             source_type VARCHAR(30) NOT NULL,
+                             source_id BIGINT NOT NULL,
+                             created_at DATETIME(6) NOT NULL,
+                             updated_at DATETIME(6) NOT NULL,
+                             deleted_at DATETIME(6),
+                             created_by VARCHAR(100),
+                             updated_by VARCHAR(100),
+
+                             PRIMARY KEY (id),
+
+                             CONSTRAINT uk_coin_ledger_source UNIQUE (source_type, source_id),
+                             CONSTRAINT fk_coin_ledger_member FOREIGN KEY (member_id) REFERENCES member(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- coin_ledger 인덱스
+CREATE INDEX idx_coin_ledger_member_created ON coin_ledger (member_id, created_at);
+
+
+
 -- ================================================================
 -- 테이블 생성 순서
 -- ================================================================
@@ -272,3 +299,4 @@ CREATE INDEX idx_payment_created_at ON payment(created_at);
 -- 13. episode_like (member, episode 참조)
 -- 14. episode_rating (member, episode 참조)
 -- 15. payment (member 참조)
+-- 16. coin_ledger (member 참조)
