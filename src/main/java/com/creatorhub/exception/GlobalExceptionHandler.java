@@ -10,6 +10,7 @@ import com.creatorhub.exception.hashtag.HashtagException;
 import com.creatorhub.exception.member.MemberException;
 import com.creatorhub.exception.auth.JwtAuthenticationException;
 import com.creatorhub.exception.fileUpload.s3.PresignedUrlIssueException;
+import com.creatorhub.exception.payment.PaymentException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -198,6 +199,25 @@ public class GlobalExceptionHandler {
                 .status(ex.getErrorCode().getHttpStatus())
                 .body(errorResponse);
     }
+
+    /**
+     * 결제/충전 관련 예외 처리
+     */
+    @ExceptionHandler(PaymentException.class)
+    public ResponseEntity<ErrorResponse> PaymentException(
+            PaymentException ex,
+            HttpServletRequest request) {
+
+        log.warn("PaymentException occurred - Message: {}", ex.getMessage());
+
+        ErrorResponse errorResponse =
+                ErrorResponse.of(ex.getErrorCode(), request.getRequestURI());
+
+        return ResponseEntity
+                .status(ex.getErrorCode().getHttpStatus())
+                .body(errorResponse);
+    }
+
 
     /**
      * 예상하지 못한 모든 예외 처리

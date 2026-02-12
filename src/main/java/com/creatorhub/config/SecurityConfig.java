@@ -15,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 
 @Configuration
 @Slf4j
@@ -64,6 +65,9 @@ public class SecurityConfig {
                         "/api/files/resize-complete",
                         "/error"
                 ).permitAll()
+                // 토스 pg 테스트용(제거 예정)
+                .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+                .requestMatchers("/index.html", "/success.html", "/fail.html").permitAll()
                 .anyRequest().authenticated()
         );
         return httpSecurity.build();

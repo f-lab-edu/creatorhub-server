@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ko">
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Document</title>
+   </head>
+   <body>
+      결제 진행 중 입니다 :)
+      <script>
+         const params = new URLSearchParams(location.search)
+         const paymentType = params.get('paymentType')
+         const paymentKey = params.get('paymentKey')
+         const orderId = params.get('orderId')
+         const amount = Number(params.get('amount'))
+         const requestData = JSON.stringify({ paymentType, paymentKey, orderId, amount })
+
+         fetch('http://localhost/api/payments/confirm', {
+             method: 'POST',
+             headers: {
+                 'Content-Type': 'application/json',
+                 'Authorization': `Bearer `,
+             },
+             body: requestData,
+         })
+             .then((r) => r.json())
+             .then(console.log)
+      </script>
+   </body>
+</html>

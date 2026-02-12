@@ -258,5 +258,33 @@ WHERE storage_key = ?
 - 스토리지 키 기반 파일 조회
 - 중복 파일 등록 방지
 
+---
 
+## 13. PG결제 (payment)
 
+### 인덱스
+```sql
+UNIQUE INDEX uk_payment_order_id (order_id)
+UNIQUE INDEX uk_payment_payment_key (payment_key)
+
+INDEX idx_payment_member_created_at (member_id, created_at)
+INDEX idx_payment_created_at (created_at)
+```
+
+### 조회 패턴
+```sql
+-- 회원의 결제 내역 최신순 조회 (페이징)
+WHERE member_id = ?
+ORDER BY created_at DESC
+LIMIT ?
+
+-- 전체 결제 내역 최신순 조회 (관리/운영)
+ORDER BY created_at DESC
+LIMIT ?
+```
+
+### 목적
+- `uk_payment_order_id`: 동일 주문(order_id) 중복 결제 저장 방지 (주문 단위 유일성 보장)
+- `uk_payment_payment_key`: 동일 결제(payment_key) 중복 처리 방지 (웹훅 재전송/중복 요청 대비)
+- `idx_payment_member_created_at`: 회원 기준 결제 내역 조회 시 정렬 비용 제거 및 LIMIT 페이징 최적화
+- `idx_payment_created_at`: 전체 결제 내역 최신순 조회 시 정렬 비용 제거 및 LIMIT 페이징 최적화

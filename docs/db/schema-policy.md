@@ -47,6 +47,7 @@ DB는 Enum을 알지 못하도록 설계하고, Enum 값은 단순 문자열(VAR
 ### 적용
 - member: UNIQUE (email) => 회원의 email은 중복될 수 없다.
 - hashtag: UNIQUE (title) => 해시태그명은 중복될 수 없다.
+- payment: UNIQUE(payment_key) => 같은 PG 결제 결과는 중복될 수 없다.(PG사의 중복 웹훅이 올 경우 방지)
 
 ### 결과
 - 코드의 중복 검증 로직에 의존하지 않고 DB가 도메인 식별자의 유일성을 직접 보장한다.
@@ -85,6 +86,7 @@ DB 레벨에서 유니크 제약으로 중복을 차단한다.
 - creation_favorite: UNIQUE (member_id, creation_id) => 한 작품은 한번만 관심 작품으로 등록할 수 있다.
 - episode_like: UNIQUE (member_id, episode_id) => 한 회차에 한번만 좋아요를 할 수 있다.
 - episode_rating: UNIQUE (member_id, episode_id) => 한 회차에 한번만 별점을 등록할 수 있다.
+- payment: UNIQUE(order_id) => 주문 하나당 한번의 결제만 진행될 수 있다.
 
 ### 결과
 코드 레벨의 중복 체크 없이, DB가 멱등성을 보장한다.

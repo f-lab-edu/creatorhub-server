@@ -46,6 +46,9 @@ public class Member extends BaseSoftDeleteTimeEntity {
     @Column(nullable = false, length = 30, columnDefinition = "VARCHAR(30)")
     private Role role;
 
+    @Column(nullable = false)
+    private Long coinBalance;
+
     @OneToOne(mappedBy = "member", fetch = FetchType.LAZY)
     private Creator creator;
 
@@ -55,13 +58,15 @@ public class Member extends BaseSoftDeleteTimeEntity {
                    String name,
                    LocalDate birthday,
                    Gender gender,
-                   Role role) {
+                   Role role,
+                   Long coinBalance ) {
         this.email = email;
         this.password = password;
         this.name = name;
         this.birthday = birthday;
         this.gender = gender;
         this.role = role;
+        this.coinBalance = coinBalance;
     }
 
     public static Member createMember(String email,
@@ -77,6 +82,7 @@ public class Member extends BaseSoftDeleteTimeEntity {
                 .birthday(birthday)
                 .gender(gender)
                 .role(Role.MEMBER)
+                .coinBalance(0L)
                 .build();
     }
 

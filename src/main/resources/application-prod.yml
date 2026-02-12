@@ -50,3 +50,6 @@ file:
   max:
     thumbnail-size: 1MB
     manuscript-size: 5MB
+
+toss:
+  secret-key: ${TOSS_SECRET_KEY}
