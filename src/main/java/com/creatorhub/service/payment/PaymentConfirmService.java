@@ -1,24 +1,26 @@
 package com.creatorhub.service.payment;
 
+import com.creatorhub.constant.PaymentStatus;
+import com.creatorhub.dto.payment.PaymentOrderRequest;
+import com.creatorhub.dto.payment.PaymentOrderResponse;
 import com.creatorhub.dto.payment.PaymentRequest;
+import com.creatorhub.dto.payment.PaymentResponse;
 import com.creatorhub.dto.payment.toss.TossConfirmResponse;
+import com.creatorhub.dto.payment.toss.TossPaymentResponse;
 import com.creatorhub.entity.Member;
 import com.creatorhub.entity.Payment;
 import com.creatorhub.exception.member.MemberNotFoundException;
+import com.creatorhub.exception.payment.PaymentConfirmFailedException;
 import com.creatorhub.repository.MemberRepository;
-import com.creatorhub.service.CoinLedgerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.Base64;
 
 @Service
@@ -32,15 +34,72 @@ public class PaymentConfirmService {
 
     private static final String CONFIRM_URL =
             "https://api.tosspayments.com/v1/payments/confirm";
+    private static final String PAYMENT_GET_URL =
+            "https://api.tosspayments.com/v1/payments/{paymentKey}";
 
     private final PaymentService paymentService;
-    private final CoinLedgerService coinLedgerService;
     private final MemberRepository memberRepository;
 
-    @Transactional
-    public TossConfirmResponse tossConfirmAndSave(PaymentRequest req, Long id) {
 
-        // 1. Toss 결제 요청 및 응답
+    /**
+     * 결제 주문 생성
+     */
+    public PaymentOrderResponse createOrder(PaymentOrderRequest req, Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(MemberNotFoundException::new);
+        return paymentService.createOrder(req, member);
+    }
+
+    /**
+     * 토스 결제 요청 및 payment, coin_ledger 테이블에 save
+     * Toss PG 결제가 있으므로 @Transactional 사용 하지 X
+     */
+    public PaymentResponse confirmAndSave(PaymentRequest req, Long id) {
+
+        // 1. 결제 요청시 payment 테이블에 결과 반영
+        Member member = memberRepository.findById(id)
+                .orElseThrow(MemberNotFoundException::new);
+
+        // coinAmount 계산
+        // 충전금액은 UI에서 정해진 금액을 선택하게 되어있으므로 단순 계산
+        // 100원 = 1코인
+        long coinAmount = req.amount() / 100;
+
+        // 서버에 저장된 주문이 있으면 금액 검증 후 사용,
+        // 없으면 신규 PENDING 생성
+        Payment payment = paymentService.findAndValidateAmountOrCreate(member, req, coinAmount);
+
+        // 이미 PAID(결제상태)면 -> 그냥 반환(멱등성)
+        if (payment.getStatus() == PaymentStatus.PAID) {
+            log.info("이미 처리된 결제입니다. orderId={}", req.orderId());
+
+            return new PaymentResponse(
+                    payment.getOrderId(),
+                    payment.getStatus(),
+                    payment.getAmount(),
+                    payment.getCoinAmount(),
+                    payment.getApprovedAt()
+            );
+        }
+
+        try {
+            // 2. 토스에 결제 요청
+            TossConfirmResponse toss = callTossConfirm(req);
+
+            // 3. 토스 결제 성공 후 payment, coin_ledger 테이블에 결과 반영
+            return paymentService.afterConfirmSave(toss, member, payment);
+
+        } catch (Exception e) {
+            log.error("토스 결제 요청 중 실패 orderId={}", req.orderId(), e);
+            paymentService.markFailed(payment);
+            throw new PaymentConfirmFailedException("토스 결제 요청 중 실패했습니다.");
+        }
+    }
+
+    /**
+     * 토스 결제 요청
+     */
+    private TossConfirmResponse callTossConfirm(PaymentRequest req) {
         String auth = "Basic " + Base64.getEncoder()
                 .encodeToString((tossSecretKey + ":").getBytes(StandardCharsets.UTF_8));
 
@@ -67,42 +126,38 @@ public class PaymentConfirmService {
             throw new IllegalStateException("토스 confirm 응답이 비어있습니다.");
         }
 
-        log.info("토스 결제 응답 완료 - getBody(): {}", toss);
+        log.debug("토스 결제 응답 완료 - getBody(): {}", toss);
+        return toss;
+    }
 
-        // 2. Payment에 결제 응답 값 저장
-        Member member = memberRepository.findById(id)
-                .orElseThrow(MemberNotFoundException::new);
 
-        String pgProvider = "TOSS";
-        String paymentType = toss.method();
-        LocalDateTime approvedAt =
-                OffsetDateTime.parse(toss.approvedAt()).toLocalDateTime();
+    /**
+     * 토스 결제 내역 확인
+     */
+    public TossPaymentResponse callTossGetPayment(String paymentKey) {
+        String auth = "Basic " + Base64.getEncoder()
+                .encodeToString((tossSecretKey + ":").getBytes(StandardCharsets.UTF_8));
 
-        // UI 상에서 충전할 수 있는 금액이 정해져 있으므로 코인금액은 단순 계산
-        // 100원 = 1코인
-        long coinAmount = req.amount()/100;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(HttpHeaders.AUTHORIZATION, auth);
 
-        Payment payment = paymentService.saveFromPgConfirm(
-                member,
-                req.orderId(),
-                pgProvider,
-                paymentType,
-                req.amount(),
-                coinAmount,
-                req.paymentKey(),
-                approvedAt
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<TossPaymentResponse> tossRes = restTemplate.exchange(
+                PAYMENT_GET_URL,
+                HttpMethod.GET,
+                entity,
+                TossPaymentResponse.class,
+                paymentKey
         );
 
-        // 3. CoinLedger에 충전 코인 저장
-        long coinBalanceAfter = member.addCoinAndGetBalance(coinAmount);
+        TossPaymentResponse toss = tossRes.getBody();
+        if (toss == null) {
+            throw new IllegalStateException("토스 결제 조회 응답이 비어있습니다.");
+        }
 
-        coinLedgerService.saveChargeByPayment(
-                member,
-                coinAmount,
-                coinBalanceAfter,
-                payment.getId()
-        );
-
+        log.debug("토스 결제 조회 완료: {}", toss);
         return toss;
     }
 }

@@ -6,9 +6,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public record TossConfirmResponse(
         String paymentKey,
         String orderId,
-        String status,        // DONE, CANCELED, etc
-        String method,        // 카드, 계좌이체 등
-        Long totalAmount,     // 결제금액
-        String approvedAt     // ISO 문자열
-) {
-}
+        String status,
+        String method,
+        Long totalAmount,
+        String approvedAt
+) { }

@@ -42,6 +42,9 @@ public enum ErrorCode {
     // 결제/충전 관련 에러
     INVALID_AMOUNT(HttpStatus.BAD_REQUEST, "PM001", "유효하지 않는 코인 사용입니다."),
     INSUFFICIENT_COIN(HttpStatus.CONFLICT, "PM002", "코인이 부족합니다."),
+    PAYMENT_CONFIRM_FAIL(HttpStatus.BAD_GATEWAY, "PM003", "PG사 결제 중 문제가 발생했습니다."),
+    PAYMENT_AMOUNT_MISMATCH(HttpStatus.BAD_REQUEST, "PM004", "결제 금액이 올바르지 않습니다."),
+    PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "PM005", "존재하지 않는 주문입니다."),
 
     // 기타 에러
     INVALID_REQUEST(HttpStatus.BAD_REQUEST, "E001", "잘못된 형식입니다."),

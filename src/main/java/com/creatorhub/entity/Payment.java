@@ -102,4 +102,45 @@ public class Payment extends BaseSoftDeleteEntity {
                 .approvedAt(approvedAt)
                 .build();
     }
+
+    public void markPaid(String pgProvider, String paymentType, String paymentKey, String tossStatus, LocalDateTime approvedAt) {
+        this.pgProvider = pgProvider;
+        this.paymentType = paymentType;
+        this.paymentKey = paymentKey;
+        this.status = applyTossStatus(tossStatus);
+        this.approvedAt = approvedAt;
+    }
+
+    public void markFailed() {
+        this.status = PaymentStatus.FAILED;
+    }
+
+
+    // 토스 status에 따른 Payment status 변경
+    // status 정책은 docs/coin_payment.md 문서 참고
+    public PaymentStatus applyTossStatus(String tossStatus) {
+
+        switch (tossStatus) {
+            case "READY", "IN_PROGRESS", "WAITING_FOR_DEPOSIT" -> {
+                return PaymentStatus.PENDING;
+            }
+            case "DONE" -> {
+                return PaymentStatus.PAID;
+            }
+            case "ABORTED", "EXPIRED" -> {
+                return PaymentStatus.FAILED;
+            }
+            case "CANCELED" -> {
+                return PaymentStatus.CANCELED;
+            }
+            case "PARTIAL_CANCELED" -> {
+                // 부분 취소(우리 도메인에서는 환불)
+                return PaymentStatus.REFUND;
+            }
+            default -> {
+                // 아직 확정 아님, PENDING 유지
+                return PaymentStatus.PENDING;
+            }
+        }
+    }
 }
