@@ -1,6 +1,13 @@
 # 코인 결제 및 충전
 
 ## ✅ 요구사항
+웹툰을 보기위한 코인 구매
+
+---
+
+## ✅ 결제 시퀀스 다이어그램(출처: 토스, 수정예정)
+
+<img src="../images/payment_sequence.png" width="600" alt="payment_erd" />
 
 ---
 
