@@ -39,7 +39,9 @@ public class JWTCheckFilter extends OncePerRequestFilter {
         return path.equals("/api/auth/login")          // 로그인
                 || path.equals("/api/auth/refresh")    // 토큰 재발급
                 || path.equals("/api/members/signup") // 회원가입
-                || path.equals("/api/files/resize-complete"); // 이미지 리사이즈 완료 콜백
+                || path.equals("/api/files/resize-complete") // 이미지 리사이즈 완료 콜백
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/v3/api-docs");
     }
 
     @Override

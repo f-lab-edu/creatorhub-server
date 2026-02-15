@@ -8,6 +8,7 @@ import com.creatorhub.dto.fileUpload.ThumbnailMarkResult;
 import com.creatorhub.dto.fileUpload.s3.*;
 import com.creatorhub.service.fileObject.FileObjectService;
 import com.creatorhub.service.fileObject.s3.S3PresignedUploadService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,9 +28,7 @@ public class FileUploadController {
     private final SseEmitters sseEmitters;
 
 
-    /**
-     * 작품 썸네일 presigned url 요청
-     */
+    @Operation(summary = "작품 썸네일 Presigned PUT URL 요청", tags = {"Creation"})
     @PreAuthorize("hasRole('ROLE_CREATOR')")
     @PostMapping("/creation-thumbnails/presigned")
     public ThumbnailPresignedUrlResponse createCreationThumbnailPresignedUrl(@Valid @RequestBody CreationThumbnailPresignedRequest req) {

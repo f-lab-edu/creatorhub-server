@@ -5,39 +5,44 @@ import com.creatorhub.dto.auth.RefreshRequest;
 import com.creatorhub.dto.auth.TokenPair;
 import com.creatorhub.security.auth.CustomUserPrincipal;
 import com.creatorhub.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(
+        name = "Auth",
+        description = """
+        사용 순서
+         1. 로그인 API 실행
+         2. accessToken 복사
+         3. 오른쪽 상단 Authorize 버튼에 토큰 입력
+        """
+)
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
 
-    /**
-     * 로그인
-     */
+    @Operation(summary = "로그인")
     @PostMapping("/login")
     public ResponseEntity<TokenPair> login(@Valid @RequestBody LoginRequest req) {
         TokenPair tokenPair = authService.login(req.email(), req.password());
         return ResponseEntity.ok(tokenPair);
     }
 
-    /**
-     * refresh 토큰 재발급
-     */
+    @Operation(summary = "Refresh 토큰 재발급")
     @PostMapping("/refresh")
     public ResponseEntity<TokenPair> refresh(@Valid @RequestBody RefreshRequest req) {
         TokenPair tokenPair = authService.refresh(req.refreshToken());
         return ResponseEntity.ok(tokenPair);
     }
 
-    /**
-     * 로그아웃
-     */
+    @Operation(summary = "로그아웃")
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@AuthenticationPrincipal CustomUserPrincipal principal) {
         Long id = principal.id();

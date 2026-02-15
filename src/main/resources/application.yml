@@ -18,3 +18,7 @@ spring:
 cloud:
   aws:
     region: ap-northeast-2
+
+springdoc:
+  swagger-ui:
+    operationsSorter: alpha
