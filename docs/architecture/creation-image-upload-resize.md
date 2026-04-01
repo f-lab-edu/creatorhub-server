@@ -62,10 +62,10 @@
 
 ### 가로형 썸네일 이미지 등록시 이미지 리사이징 과정(이전 과정까지는 동일)
 5. **Client → SpringBoot:** S3에서 업로드 완료 응답시 SSE Subscribe
-5. **(Trigger) S3 이벤트 → SQS 적재(Resize Queue)**
-   - 리사이징 실패시 3번 시도 후 **안되면** Resize DLQ에 적재
+6. **S3 이벤트 → SQS 적재(Resize Queue) → Lambda(SQS가 Lambda 트리거)**
+   - 리사이징 작업 실행(6개의 파생 이미지 생성)
+   - 리사이징 실패시 3번 시도 후 안되면 Resize DLQ에 적재
    - 이후 CloudWatch → SNS → Slack으로 실패 메세지 전송(Lambda)
-6. **SQS → Lambda:** 리사이징 작업 실행(6개의 파생 이미지 생성)
 7. **Lambda → S3:** 파생 이미지 저장
 8. **Lambda → SpringBoot:** 처리 완료 후 백엔드로 콜백(HMAC 인증) → SSE로 완료 알림
     - 백엔드 콜백 실패시 Callback Fail Queue에 적재
